@@ -5,15 +5,15 @@ Status: conceitual; não é schema Prisma implementado. Data: 2026-11-11.
 ## Entidades e invariantes
 | Entidade | Campos conceituais e regras |
 | --- | --- |
-| Coach | id, authIssuer, authSubject, nome, estado; identidade OIDC única por issuer/subject. |
+| User (candidato) / Coach | Identidade autenticada e perfil esportivo são responsabilidades distintas. Proposta MVP: issuer/subject únicos no Coach, sem tabela User separada enquanto só existir treinador autenticado; separar User quando houver ciclo de vida/perfis adicionais reais. |
 | CoachSession | hash de token opaco, coachId, expiração e revogação; não guardar cookie em claro. |
 | Athlete | id, coachId, nome, emailNormalizado, estado; e-mail não é prova de identidade nem chave global. |
-| CoachAthleteLink | id, coachId, athleteId, estado pending/active/suspended/ended, início/fim; um vínculo corrente por par, histórico preservado. |
-| Invitation | coachId, athleteId, linkId, tokenHash único, expiresAt, revokedAt, consumedAt e destinatário esperado; token nunca persistido em claro. |
+| CoachAthleteLink | id, coachId, athleteId, estado pending/active/ended, início/fim; um vínculo corrente por par, histórico preservado. |
+| Invitation | coachId, athleteId, linkId, tokenHash único, expiresAt, revokedAt, consumedAt e destinatário esperado; estado pending/used/expired/revoked derivado desses campos com transições consistentes; token nunca persistido em claro. |
 | EnrollmentSession | convite resgatado, hash de capability, expiração, estado e verificação de e-mail; acesso apenas à própria jornada pública. |
 | ConsentDocument | finalidade, versão, hash e referência do texto imutável publicado. |
 | ConsentRecord | coachId, athleteId, linkId, documento, decisão, instante e evidência mínima; retirada append-only, não sobrescrever aceite anterior. |
-| GarminConnection | coachId, athleteId, provider, identificador externo protegido, estado, tokens cifrados, keyVersion e timestamps; separada do consentimento. |
+| GarminConnection | coachId, athleteId, provider, identificador externo protegido, estado not_connected/awaiting_authorization/connected/error/disconnected, tokens cifrados, keyVersion e timestamps; separada do consentimento. |
 | AuthorizationAttempt | connectionId, enrollmentSessionId, hash de state, expiração, consumo e material PKCE protegido se exigido. |
 | IntegrationEvent | provider, identidade de entrega/escopo oficial, hash, raw protegido, estado e horário; inbox durável. |
 | ProcessingJob | tenant, referência, etapa, versão, tentativas, availableAt, lease e erro sanitizado. |
@@ -61,3 +61,12 @@ Propor convite válido por 48 horas, enrollment por 30 minutos e tentativa OAuth
 Unicidade de atividade por provider + conexão + externalId, com índice por coach/aluno/data. Escopo de ID e revisões externas dependem do contrato oficial. Um evento pode ser repetido sem duplicar atividade; atualizações geram nova revisão e invalidam análises derivadas obsoletas. Resultado único por activityId + inputRevision + algoritmo/version. Persistir amostras em lotes; unidade canônica explícita (m, s, bpm, conforme métrica) e valor ausente como null, nunca zero fabricado.
 
 Encerrar vínculo remove acesso e cancela processamento elegível. Revogar Garmin não apaga automaticamente evidência legal nem define prazo de retenção: políticas distintas precisam de aprovação e execução auditada.
+
+## Responsabilidade, cardinalidade e persistência
+Nomenclatura conceitual: CoachAthleteLink corresponde a CoachAthleteRelationship; ConsentRecord a Consent; SportsEvent a ActivityEvent; Insight a AIInsight quando produzido por IA; AuditEvent a AuditLog. Não criar entidades duplicadas apenas por nome.
+
+Coach possui muitos cadastros Athlete e relacionamentos; cada relacionamento pertence a um coach e um cadastro. Cada convite pertence a um relacionamento e origina no máximo uma jornada resgatada. Uma conexão possui muitas atividades; a atividade possui muitas amostras/splits e revisões de análise. Atividade importada manualmente pode não ter connectionId: manter referência de importação e origem `manual_fit`, sem forjar conexão Garmin. Cada análise contém eventos e pode gerar insights; feedback tem autor treinador e referência à atividade, com aluno derivado e validado pela relação, sem aceitar associação divergente.
+
+Persistir identidade/vínculo, convites/consentimentos, conexão e atividade quando suas sprints forem implementadas. Samples e splits podem ser tabelas ou blocos normalizados conforme volume/acesso; decidir na SPRINT 05 com consultas reais. Eventos podem pertencer ao agregado de análise; ReadState pode ser campo do MonitoringEvent enquanto houver um destinatário. Sessions, inbox/jobs e tentativas são necessidades técnicas, não tabelas obrigatórias de domínio. Métricas de dashboard são projeções calculadas inicialmente, sem tabela de contador independente. Nenhum desses modelos exige migrations na SPRINT 00.
+
+O mecanismo público de revogação deve usar capability específica, expiração, uso único, confirmação de identidade e rate limit; não reutilizar convite consumido nem fornecer IDs livres. Solicitação de fim do vínculo tem estado e auditoria próprios, sem inventar estado adicional do vínculo. Detalhes do canal e da verificação precisam de aprovação na SPRINT 03.

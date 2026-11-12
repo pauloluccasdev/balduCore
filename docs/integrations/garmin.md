@@ -67,3 +67,10 @@ Desconexão local bloqueia novas ingestões e jobs imediatamente e limpa/revoga 
 
 ## Checklist antes do provider oficial
 Confirmar programa/plano, acesso e contrato, protocolo e URLs oficiais, scopes mínimos, PKCE/refresh, autenticação de entregas e retries, IDs/revisões, formatos/amostras disponíveis, limites, replays, histórico, revogação e restrições de múltiplas conexões. Testar sandbox/ambiente autorizado e deidentificar fixtures conforme termos. Sem essas respostas, apenas o mock pode sustentar desenvolvimento local.
+
+## Aluno após a conexão e evolução futura
+Na SPRINT 03, projetar mecanismo público seguro de retirada de autorização e solicitação de encerramento, com token de finalidade restrita e confirmação de identidade, sem conta de dashboard. Na SPRINT 04, integrar suas consequências à desconexão e aos jobs. Não reutilizar capability expirada de onboarding para gestão permanente.
+
+SPRINT 05 admite importação manual de FIT para desenvolvimento, separada de sincronização oficial. Validar formato com parser mantido, tamanho máximo, quantidade de amostras, tempo/memória de processamento e checksum; tratar arquivo como não confiável, não usar nome enviado como caminho e não persistir GPS sem necessidade. Fonte `manual_fit` indica upload, não prova de origem/autenticidade Garmin ou veracidade das medições. Idempotência por tenant/arquivo e identificação de possíveis duplicatas com sincronização precisam de regra explícita, sem descartar silenciosamente atividades por similaridade.
+
+MVP 2: treino estruturado (aquecimento, esforço/repetições, recuperação, desaquecimento, metas, duração/distância) e status de publicação para aluno poderão usar adapter de envio separado se a Training API oficial permitir. Não criar schema, endpoints ou provider de envio no MVP 1. Não prometer histórico ou sincronização instantânea.
