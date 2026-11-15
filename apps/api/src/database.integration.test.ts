@@ -5,7 +5,10 @@ import { createApp } from './app.js';
 import { readConfig } from './config.js';
 import { createDatabase } from './database.js';
 test('Prisma → PostgreSQL real → readiness HTTP 200', async () => {
-  const database = createDatabase(readConfig(process.env).DATABASE_URL);
+  const database = createDatabase(
+    readConfig({ ...process.env, DATABASE_URL: process.env.TEST_DATABASE_URL })
+      .DATABASE_URL,
+  );
   const app = await createApp(database, pino({ level: 'silent' }));
   try {
     await database.ping();

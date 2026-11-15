@@ -39,7 +39,7 @@
   box-sizing: border-box;
 }
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 body {
   margin: 0;
@@ -275,6 +275,7 @@ h3 {
   border-color: var(--muted);
 }
 .button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -793,4 +794,143 @@ tbody tr:last-child td {
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Fluxos autenticados: utilizam as mesmas superfícies e tokens da fundação. */
+.session-bar {
+  margin-left: 236px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 10px 28px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.login-card {
+  max-width: 440px;
+  width: 100%;
+  display: grid;
+  gap: 20px;
+  padding: 32px;
+}
+.login-card h1 {
+  font-size: 28px;
+}
+.login-brand {
+  font-size: 24px;
+  font-weight: 700;
+}
+.login-brand span {
+  color: var(--accent);
+}
+.primary-button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  min-height: 44px;
+  font-weight: 700;
+}
+.students-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.athlete-form {
+  display: grid;
+  gap: 12px;
+}
+.athlete-form label {
+  font-size: 13px;
+  font-weight: 700;
+}
+.athlete-form input,
+.athlete-filters input,
+.athlete-filters select {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+}
+.athlete-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.athlete-filters label {
+  flex: 1;
+  min-width: 140px;
+  font-size: 12px;
+  display: grid;
+  gap: 6px;
+}
+.athlete-filters .button {
+  min-height: 42px;
+}
+.form-error {
+  color: var(--accent);
+}
+.pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+.profile-stack {
+  display: grid;
+  gap: 18px;
+}
+.profile-status {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+.profile-status dt {
+  color: var(--muted);
+}
+.profile-status dd {
+  margin: 0;
+  font-weight: 700;
+}
+@media (max-width: 1250px) {
+  .session-bar {
+    margin-left: 216px;
+  }
+  .students-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 767px) {
+  .session-bar {
+    margin-left: 0;
+    padding: 12px 16px 0;
+  }
+  .login-card {
+    padding: 24px;
+  }
+}
+
+.page-header > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.session-bar {
+  flex-wrap: wrap;
+}
+.session-bar > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

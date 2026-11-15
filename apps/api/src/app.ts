@@ -1,19 +1,67 @@
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
-import { Module } from '@nestjs/common';
+import {
+  Module,
+  Catch,
+  HttpException,
+  type ExceptionFilter,
+  type ArgumentsHost,
+} from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Logger } from 'pino';
 import type { DatabaseHealth } from './database.js';
 import { DATABASE, HealthController } from './health.js';
+import { AthletesModule } from './modules/athletes/athletes.module.js';
+import type { PrismaClient } from './generated/prisma/client.js';
+import type { Config } from './config.js';
+import type { IdentityProvider } from './modules/auth/google-provider.js';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { Response } from 'express';
+@Catch()
+class SanitizedErrors implements ExceptionFilter {
+  catch(error: unknown, host: ArgumentsHost) {
+    const response = host.switchToHttp().getResponse<Response>();
+    if (error instanceof HttpException) {
+      response.status(error.getStatus()).json(error.getResponse());
+    } else if (
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      (error.status === 400 || error.status === 413)
+    ) {
+      response
+        .status(error.status)
+        .json({ message: 'Corpo da requisição inválido ou excessivo.' });
+    } else {
+      response
+        .status(503)
+        .json({ message: 'Serviço indisponível. Tente novamente.' });
+    }
+  }
+}
 
 export async function createApp(
   database: DatabaseHealth,
   logger: Logger,
   exposeDocs = false,
+  features?: {
+    client: PrismaClient;
+    config: Config;
+    provider?: IdentityProvider;
+  },
 ) {
   @Module({
+    imports: features
+      ? [
+          AthletesModule.register(
+            features.client,
+            features.config,
+            features.provider,
+          ),
+        ]
+      : [],
     controllers: [HealthController],
     providers: [
       { provide: DATABASE, useValue: database },
@@ -24,10 +72,11 @@ export async function createApp(
     ],
   })
   class AppModule {}
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: false,
     bodyParser: false,
   });
+  app.useGlobalFilters(new SanitizedErrors());
   app.getHttpAdapter().getInstance().disable('x-powered-by');
   app.use(
     (request: IncomingMessage, response: ServerResponse, next: () => void) => {
@@ -35,6 +84,7 @@ export async function createApp(
       response.setHeader('X-Request-Id', correlationId);
       response.setHeader('Cache-Control', 'no-store');
       response.setHeader('X-Content-Type-Options', 'nosniff');
+      response.setHeader('Referrer-Policy', 'no-referrer');
       const start = performance.now();
       response.on('finish', () => {
         // Sem URL, query, headers, body ou exceção bruta: futuras rotas podem conter tokens.
@@ -51,11 +101,19 @@ export async function createApp(
       next();
     },
   );
+  app.useBodyParser('json', { limit: '16kb' });
   if (exposeDocs) {
     const spec = new DocumentBuilder()
       .setTitle('BalduCore API')
-      .setDescription('SPRINT 01: endpoints operacionais; sem API de negócio.')
-      .setVersion('0.1.0')
+      .setDescription(
+        'API do treinador: autenticação e alunos. Cookies de sessão e CSRF exigidos nas mutações.',
+      )
+      .setVersion('0.2.0')
+      .addCookieAuth(
+        'balducore_session',
+        { type: 'apiKey', in: 'cookie' },
+        'coachSession',
+      )
       .build();
     SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, spec));
   }

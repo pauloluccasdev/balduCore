@@ -11,16 +11,20 @@
     "db:generate": "node --env-file-if-exists=../../.env node_modules/prisma/build/index.js generate",
     "db:migrate": "node --env-file-if-exists=../../.env node_modules/prisma/build/index.js migrate dev",
     "db:deploy": "node --env-file-if-exists=../../.env node_modules/prisma/build/index.js migrate deploy",
-    "test": "pnpm build && node --test dist/config.test.js dist/health.test.js",
-    "test:integration": "pnpm build && node --env-file=../../.env --test dist/database.integration.test.js"
+    "test": "pnpm build && node --test dist/config.test.js dist/health.test.js dist/security.test.js",
+    "test:integration": "pnpm build && node --env-file=../../.env --test --test-concurrency=1 dist/database.integration.test.js dist/auth.integration.test.js",
+    "test:e2e:server": "node --env-file=../../.env dist/test-support/e2e-server.js",
+    "maintenance": "pnpm build && node --env-file=../../.env dist/scripts/maintenance.js"
   },
   "dependencies": {
     "@nestjs/common": "12.5.0",
     "@nestjs/core": "12.5.0",
     "@nestjs/platform-express": "12.5.0",
     "@nestjs/swagger": "12.1.2",
-    "@prisma/client": "7.10.1",
     "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "cookie": "2.0.2",
+    "openid-client": "6.9.0",
     "pg": "8.23.1",
     "pino": "10.4.0",
     "reflect-metadata": "0.2.2",
@@ -28,7 +32,8 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "prisma": "7.10.1",
-    "@types/pg": "8.23.1"
+    "@types/express": "5.0.6",
+    "@types/pg": "8.23.1",
+    "prisma": "7.10.1"
   }
 }

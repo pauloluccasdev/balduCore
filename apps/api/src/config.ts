@@ -6,6 +6,13 @@ const schema = z.object({
     .refine((value) =>
       ['postgres:', 'postgresql:'].includes(new URL(value).protocol),
     ),
+  APP_ORIGIN: z.string().url().default('http://127.0.0.1:3000'),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  GOOGLE_ALLOWED_EMAILS: z.string().default(''),
+  GOOGLE_ALLOWED_SUBJECTS: z.string().default(''),
+  AUTH_SECRET: z.string().default(''),
+  SESSION_HOURS: z.coerce.number().int().min(1).max(24).default(8),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   API_HOST: z.string().trim().min(1).default('127.0.0.1'),
   LOG_LEVEL: z
@@ -24,5 +31,30 @@ export function readConfig(environment: NodeJS.ProcessEnv): Config {
       `Configuração inválida: ${[...new Set(result.error.issues.map((issue) => issue.path.join('.')))].join(', ')}`,
     );
   }
-  return result.data;
+  const config = result.data;
+  const origin = new URL(config.APP_ORIGIN);
+  if (
+    !['http:', 'https:'].includes(origin.protocol) ||
+    origin.origin !== config.APP_ORIGIN ||
+    (config.NODE_ENV === 'production' && origin.protocol !== 'https:')
+  ) {
+    throw new Error('Configuração inválida: APP_ORIGIN');
+  }
+  const configured = Boolean(
+    config.GOOGLE_CLIENT_ID ||
+    config.GOOGLE_CLIENT_SECRET ||
+    config.AUTH_SECRET,
+  );
+  if (
+    configured &&
+    (!config.GOOGLE_CLIENT_ID ||
+      !config.GOOGLE_CLIENT_SECRET ||
+      !/^[A-Za-z0-9+/]{43}=$/.test(config.AUTH_SECRET) ||
+      Buffer.from(config.AUTH_SECRET, 'base64').length !== 32)
+  ) {
+    throw new Error(
+      'Configuração inválida: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_SECRET',
+    );
+  }
+  return config;
 }

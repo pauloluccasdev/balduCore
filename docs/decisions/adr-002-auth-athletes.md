@@ -1,6 +1,6 @@
 # ADR-002 — Autenticação e identidade dos alunos na SPRINT 02
 
-Status: proposto; aguarda decisão do responsável técnico. SPRINT 02 autorizada para preparação; implementação das decisões abaixo ainda pendente. Data: 2026-11-15.
+Status: aprovado pelo responsável técnico; implementação da SPRINT 02 em revisão. Data: 2026-11-15.
 
 ## Contexto
 
@@ -28,12 +28,12 @@ Fonte primária: [Google OpenID Connect](https://developers.google.com/identity/
 - Sem modo de login falso em produção. Fixtures de identidade para testes são isoladas; testes locais de protocolo não substituem smoke do fornecedor real autorizado.
 - DTOs validados, limites/paginação, proteção de mutações, erros sanitizados, auditoria mínima e rate limiting nos endpoints correspondentes. Nunca registrar token, cookie, e-mail ou senha em logs.
 
-## Proposta de alunos — também sujeita a aprovação
+## Alunos — decisão aprovada
 
 Athlete é cadastro pertencente ao coach, separado do vínculo CoachAthleteRelationship. Não introduzir identidade global, organização, compartilhamento multi-coach ou fusão automática de cadastros.
 
 - Cadastro mínimo: nome completo e e-mail; consentimento não pode ser criado pelo treinador em nome do aluno.
-- E-mail normalizado para busca e prevenção de duplicatas dentro do mesmo coach; sem unicidade global entre coaches. Confirmar esta regra antes da migration.
+- E-mail normalizado para busca e prevenção de duplicatas dentro do mesmo coach; sem unicidade global entre coaches. Regra aprovada e garantida por índice composto na migration.
 - Cadastro cria vínculo pendente. Somente o aceite da SPRINT 03 o torna ativo; não adicionar botão de ativação manual nesta entrega.
 - Perfil mostra Garmin não conectada sem criar conexão artificial ou credenciais; estados reais de conexão entram na SPRINT 04.
 - Listagem paginada, busca por nome/e-mail e filtro de vínculo. Perfil permite consultar/editar dados básicos. Histórico esportivo e análises indicam indisponibilidade até sprints correspondentes, sem fixtures misturadas a cadastros reais.
@@ -57,3 +57,13 @@ Treinador autorizado entra, sai e administra seus alunos persistidos. Acesso an�
 ## Pendências herdadas
 
 Docker/WSL ainda requer verificação de disponibilidade; não alegar execução de Compose sem evidência. CI permanece como modelo por falta de escopo workflow da credencial GitHub; não ativar contornando essa restrição.
+
+## Resultado implementado
+
+Google OIDC via openid-client 6.9.0 com verificação adicional de assinatura habilitada, issuer fixo Google e descoberta oficial HTTPS. Autorização por lista de e-mails Gmail/Workspace com claims verificadas ou subjects Google confirmados para domínios terceiros. Cadastro automático somente após autenticação e autorização, sem união por e-mail. Sessão local opaca por 8 horas configuráveis e tentativas OAuth de 10 minutos com material cifrado, uso único e vínculo ao navegador.
+
+AuthModule e AthletesModule concentram responsabilidades. Constraints compostas e checagem explícita de coachId protegem recursos. Cadastro, vínculo e auditoria são atômicos. Edição exige version e retorna conflito em concorrência. Persistência inicial simultânea do mesmo treinador usa INSERT ON CONFLICT na transação para evitar corrida do primeiro login.
+
+Rate limiting no mesmo PostgreSQL dispensa Redis e compartilha contadores. Chaves derivadas do segredo/origem/IP minimizam exposição, expiração de um minuto; operação de limpeza documentada, sem scheduler antecipado. Auditoria registra identidade/ação/recurso, não payload pessoal. O vínculo atual é 1:1 com o cadastro do coach; histórico de transições fica para os casos de uso futuros, sem reativação manual nesta sprint.
+
+Testes usam TEST_DATABASE_URL diferente do banco operacional e emissor OIDC isolado com JWTs assinados; não há bypass no entrypoint de produção. O teste com conta Google real depende de credenciais/configuração autorizadas e segue pendente. Procedimentos operacionais estão no [README](../../README.md).

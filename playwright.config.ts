@@ -27,14 +27,14 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter @balducore/api start',
+      command: 'pnpm --filter @balducore/api test:e2e:server',
       url: 'http://127.0.0.1:3001/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     {
       command: 'pnpm --filter @balducore/web start',
       url: 'http://127.0.0.1:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
   ],
 });

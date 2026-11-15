@@ -1,5 +1,7 @@
 'use client';
 import { useRef } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Activity,
   Bell,
@@ -15,7 +17,7 @@ import {
 } from 'lucide-react';
 const navigation = [
   { label: 'Dashboard', icon: LayoutDashboard, sprint: null },
-  { label: 'Alunos', icon: Users, sprint: 'Sprint 02' },
+  { label: 'Alunos', icon: Users, sprint: null },
   { label: 'Planejamento', icon: CalendarDays, sprint: 'MVP 2' },
   { label: 'Atividades', icon: Activity, sprint: 'Sprint 05' },
   {
@@ -27,11 +29,12 @@ const navigation = [
   { label: 'Central de Monitoramento', icon: Bell, sprint: 'Sprint 09' },
 ];
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
   return (
     <>
-      <a
+      <Link
         className="brand"
-        href="#dashboard"
+        href="/"
         aria-label="BalduTraining — Dashboard"
         onClick={onNavigate}
       >
@@ -44,7 +47,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </strong>
           <small>Painel do treinador</small>
         </span>
-      </a>
+      </Link>
       <nav aria-label="Navegação principal">
         <ul className="nav-list">
           {navigation.map(({ label, icon: Icon, sprint }) => (
@@ -60,10 +63,18 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                   <small>{sprint === 'MVP 2' ? 'MVP 2' : 'Em breve'}</small>
                 </div>
               ) : (
-                <a
-                  className="nav-item active"
-                  href="#dashboard"
-                  aria-current="page"
+                <Link
+                  className={`nav-item ${label === 'Dashboard' ? (pathname === '/' ? 'active' : '') : pathname.startsWith('/alunos') ? 'active' : ''}`}
+                  href={label === 'Dashboard' ? '/' : '/alunos'}
+                  aria-current={
+                    (
+                      label === 'Dashboard'
+                        ? pathname === '/'
+                        : pathname.startsWith('/alunos')
+                    )
+                      ? 'page'
+                      : undefined
+                  }
                   onClick={onNavigate}
                 >
                   <Icon size={19} aria-hidden="true" />
@@ -73,7 +84,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     size={15}
                     aria-hidden="true"
                   />
-                </a>
+                </Link>
               )}
             </li>
           ))}
@@ -90,7 +101,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <small>Em breve</small>
         </div>
         <p>
-          BalduCore <span>•</span> Ambiente demo
+          BalduCore <span>•</span> Área do treinador
         </p>
       </div>
     </>
@@ -118,7 +129,7 @@ export function Sidebar() {
         <span className="mobile-brand">
           Baldu<span>Training</span>
         </span>
-        <span className="badge">Demo</span>
+        <span className="badge">Coach</span>
       </div>
       <dialog
         ref={dialog}

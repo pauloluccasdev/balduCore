@@ -1,6 +1,6 @@
 # Arquitetura inicial
 
-Status: arquitetura-base aprovada; fundação da SPRINT 01 implementada e em revisão. Atualização: 2026-11-15. Decisão de stack: [ADR-001](../decisions/adr-001-stack.md).
+Status: arquitetura-base aprovada; SPRINT 01 mesclada e SPRINT 02 implementada em revisão. Atualização: 2026-11-15. Decisão de stack: [ADR-001](../decisions/adr-001-stack.md).
 
 ## Diagnóstico
 
@@ -123,3 +123,9 @@ API usa Node ESM, TypeScript com decorators/metadata e imports relativos `.js` c
 Next reescreve `/api/*` para backend em loopback. O teste E2E verifica essa fronteira até PostgreSQL real. Dashboard deliberadamente independe dessa API enquanto os dados forem fixtures. Tema persiste somente preferência visual; nenhum token de autenticação existe no frontend. Navegação futura é texto identificado como indisponível, sem endpoints ou páginas decorativas.
 
 O modelo em `infra/github-actions-ci.yml` prevê instalação congelada, formatação, lint, tipos, testes unitários/HTTP/integração, builds e Playwright com PostgreSQL; não está ativo porque a credencial OAuth recusou a criação de workflows. Estado e limitações de execução local estão no [roadmap](../roadmap.md).
+
+## Evolução na SPRINT 02
+
+AuthModule valida Google OIDC e mantém sessão local no Nest; AthletesModule verifica principal e propriedade em cada recurso. Next usa apenas API com cache no-store e cookies repassados no servidor; não acessa Prisma. As páginas /, /alunos e /alunos/:id são dinâmicas e protegidas; /login é pública. Emissor assinado local só é construído pelos entrypoints de teste; sem toggle de mock no main.
+
+Persistência inicial definida pela necessidade: Coach, CoachSession, AuthAttempt, Athlete, CoachAthleteRelationship, AuditLog e RateLimitBucket. TEST_DATABASE_URL é separado do banco de uso. Material PKCE/nonce em tentativas é cifrado; tokens Google não são persistidos. Ver [ADR-002](../decisions/adr-002-auth-athletes.md), README e resultado no roadmap. Partes anteriores deste documento descrevem a sequência da fundação, não ausência atual de autenticação.

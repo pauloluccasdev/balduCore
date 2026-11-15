@@ -7,7 +7,6 @@ import {
   Clock3,
   PlugZap,
 } from 'lucide-react';
-import { Sidebar } from '../../components/sidebar';
 import { ThemeToggle } from '../../components/theme-toggle';
 import { Badge, Card, MetricCard } from '../../components/ui';
 import { activitiesForPeriod, athletes, formatDistance } from './demo-data';
@@ -18,7 +17,6 @@ export function Dashboard() {
   const sports = ['Corrida', 'Ciclismo', 'Natação'];
   return (
     <div className="app-shell">
-      <Sidebar />
       <main className="main-content" id="dashboard" tabIndex={-1}>
         <header className="page-header">
           <div>
