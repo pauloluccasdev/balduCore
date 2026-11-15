@@ -58,7 +58,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-Integração exige PostgreSQL acessível pela DATABASE_URL. Não usa banco em memória nem ignora silenciosamente a ausência do banco. E2E exige build prévio, inicia API/web automaticamente e verifica o PostgreSQL real pelo proxy. Screenshots dos temas em desktop/tablet/mobile ficam em `test-results/` (ignoradas no Git; artefato no CI). Testes de API usam portas efêmeras e não modificam dados. O modelo de CI também provisiona PostgreSQL, mas ainda não está ativo.
+Integração exige PostgreSQL acessível pela DATABASE_URL. Não usa banco em memória nem ignora silenciosamente a ausência do banco. E2E exige build prévio, inicia API/web automaticamente e verifica o PostgreSQL real pelo proxy. Screenshots dos temas em desktop/tablet/mobile ficam em `test-results/` (ignoradas no Git; modelo de CI prevê upload após ativação). Testes de API usam portas efêmeras e não modificam dados. O modelo de CI também provisiona PostgreSQL, mas ainda não está ativo.
 
 Produção local de teste após build: `pnpm --filter @balducore/api start` e `pnpm --filter @balducore/web start` em terminais separados. Isso não é um plano de deploy do MVP completo.
 

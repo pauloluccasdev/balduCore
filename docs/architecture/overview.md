@@ -4,7 +4,7 @@ Status: arquitetura-base aprovada; fundação da SPRINT 01 implementada e em rev
 
 ## Diagnóstico
 
-Diagnóstico atualizado: repositório já possui um commit inicial (`10c0e83`) publicado na main, com seis documentos e oito referências PNG. Esta revisão trabalha na branch `sprint/00-discovery`. Ainda não há aplicação, package manifest, Docker, migrations, CI ou testes executáveis. A afirmação de workspace vazio descrevia a primeira inspeção, não o estado atual. `AGENTS.md` passa a registrar regras permanentes nesta entrega.
+Na SPRINT 00, o repositório tinha somente documentação e oito PNGs; o PR #1 foi mesclado em main. Na SPRINT 01, a branch `sprint/01-fundacao` adicionou aplicações web/API, configuração Prisma, Compose, testes, README e modelo de CI. Não existem autenticação, tabelas de negócio ou integração externa implementadas. O CI ainda não está ativo: a credencial de publicação não permite criar workflows.
 
 As oito referências em `docs/design/references/` foram relidas nos dois temas: composição, sidebar, cards, gráficos e validação separada de eventos/hipóteses estão registrados no [inventário visual](../product/mvp-01.md). A cor principal é `#EF3338`, conforme contexto mestre.
 
@@ -58,7 +58,7 @@ infra/
 docs/
 ```
 
-Não criar pastas vazias, pacote de domínio compartilhado com browser ou camadas abstratas sem uso. Organização interna dos módulos cresce conforme casos de uso; infraestrutura implementa portas do domínio. CI e configuração raiz serão adicionadas na fundação aprovada.
+Não criar pastas vazias, pacote de domínio compartilhado com browser ou camadas abstratas sem uso. Organização interna dos módulos cresce conforme casos de uso; infraestrutura implementa portas do domínio. Configuração raiz adicionada na fundação; o modelo de CI aguarda ativação.
 
 ## Limites dos módulos
 
@@ -92,7 +92,7 @@ Revogar acompanhamento bloqueia imediatamente leitura e novos jobs; desconectar 
 
 Logs JSON com correlationId, jobId e códigos de erro, sem nomes, e-mails ou séries detalhadas. Medir idade de fila, latência, falhas, duplicatas e última ingestão; nunca rotular métricas operacionais com dados pessoais. Health/readiness diferenciam banco, worker e providers. Secrets somente via ambiente/secret manager; exemplo contém nomes e placeholders.
 
-Testes unitários para regras; integração com PostgreSQL real para constraints, concorrência e transações; E2E para coach A/B, convite, callback, revogação e replay. Seeds opcionais, determinísticos e sintéticos, proibidos por padrão em produção. OpenAPI, lint, Prettier, tipos, build e checks em CI. Sem testes executáveis nesta entrega documental.
+Testes unitários para regras; integração com PostgreSQL real para constraints, concorrência e transações; E2E para coach A/B, convite, callback, revogação e replay. Seeds opcionais, determinísticos e sintéticos, proibidos por padrão em produção. OpenAPI, lint, Prettier, tipos, build e checks em CI. Na SPRINT 00 não havia testes executáveis; os testes da fundação estão descritos abaixo.
 
 ## Proteção de dados
 
@@ -112,7 +112,7 @@ Fonte jurídica primária: [LGPD, texto atualizado na Câmara](https://www2.cama
 
 Critério: frontend, API e banco executáveis localmente, dashboard demonstrativo coerente com referências, navegação acessível e adaptação responsiva. Não incluir autenticação, cadastro, convites, Garmin, upload FIT, IA ou worker funcional nesta sprint.
 
-A fonte tipográfica exata e o asset original do logotipo não estão no ZIP. Recomenda-se aprovar uma fonte sans-serif provisória local/licenciada e marca textual fiel até receber os originais, sem redesenhar ou apresentar a escolha como fonte original. A decisão será visível na revisão visual.
+A fonte tipográfica exata e o asset original do logotipo não estão no ZIP. A alternativa provisória foi aprovada: Arial/Helvetica e marca textual com símbolo genérico, sem apresentar a escolha como fonte ou logotipo originais. Substituir pelos assets fornecidos futuramente.
 
 ## Estado implementado da fundação
 

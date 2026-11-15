@@ -54,9 +54,11 @@ Implementado: monorepo pnpm, Next App Router/React/TypeScript/Tailwind, Nest ESM
 
 Arquivos centrais: `apps/web/src/features/dashboard/dashboard.tsx`, `apps/web/src/app/globals.css`, `apps/web/src/components/`, `apps/api/src/app.ts`, `apps/api/src/health.ts`, `apps/api/src/database.ts`, `apps/api/prisma/schema.prisma`, `infra/compose.yaml`, `tests/e2e/foundation.spec.ts`, `infra/github-actions-ci.yml` e `README.md`.
 
+Smoke de `pnpm dev`: web retornou HTTP 200 e o proxy de readiness retornou banco up; processos encerrados após validação.
+
 Validação local: instalação frozen-lockfile e peer dependencies sem conflitos; builds de ambas as aplicações; tipos; lint TypeScript/Next/hooks; formatação; 3 testes de configuração/HTTP/logs; 2 testes com Prisma e banco real/inacessível; 6 E2E em Chromium (desktop 1600px, tablet 834px e mobile 390px), incluindo proxy Next → Nest → Prisma → PostgreSQL. Capturas dark/light geradas nos três formatos e inspecionadas. Resultados locais em test-results; o modelo de CI prevê artefatos de navegador após ativação.
 
-Limitação ambiental: Docker indisponível nesta distribuição WSL. Para a validação real de banco, foi iniciado PostgreSQL 17.7 temporário fora do repositório, restrito a loopback. Isso valida API/Prisma/banco, mas não execução do Compose; é necessário habilitar Docker/WSL e executar `pnpm db:up`. O CI usa serviço PostgreSQL equivalente; seu resultado é informado no PR quando disponível.
+Limitação ambiental: Docker indisponível nesta distribuição WSL. Para a validação real de banco, foi iniciado PostgreSQL 17.7 temporário fora do repositório, restrito a loopback. Isso valida API/Prisma/banco, mas não execução do Compose; é necessário habilitar Docker/WSL e executar `pnpm db:up`. O modelo de CI prevê serviço PostgreSQL equivalente; ainda não há resultado de Actions.
 
 Limites e débitos: sem auth, dados de pessoas reais, Garmin, IA, upload ou worker. Fixtures e estados são explicitamente sintéticos, com data-base fixa; não são seeds de produção. Fonte/logotipo provisórios aprovados. Nenhuma tabela ou migration artificial: migrations de domínio entram com a persistência necessária na 02. Recharts será instalado quando houver gráfico real a implementar. API/web usam portas locais documentadas; hospedagem e segurança de produção continuam para etapas posteriores. Teste de smoke do CI não substitui revisão visual ou aceite.
 
