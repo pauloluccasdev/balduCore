@@ -3,16 +3,19 @@
 Status: desenho técnico; nenhum endpoint, payload ou escopo Garmin foi implementado ou presumido. Data de consulta: 2026-11-11.
 
 ## Evidência pública e dependências
+
 A [visão oficial do programa](https://developer.garmin.com/gc-developer-program/overview/) distingue Personal, Business Starter e Business Enterprise. Starter anuncia entrega push, capacidade limitada e ausência de histórico; Enterprise oferece alternativas de entrega e histórico conforme condições. Portanto, backfill e polling não são garantias do MVP. Personal destina-se aos próprios dados e não deve ser assumido como solução para alunos de uma plataforma comercial.
 
 A implementação comercial depende de acesso Business adequado, credenciais, documentação privada e termos aprovados. A disponibilidade anunciada não prova aprovação da BalduTraining. O fluxo de autorização será confirmado no portal oficial: não deduzir endpoints, scopes, assinatura de callbacks, refresh, limites ou formato de atividades. URL antiga pública de Activity API consultada retornou 404 e não foi usada como contrato.
 
 ## Contrato interno — não representa API Garmin
+
 Porta ActivityProvider com operações conceituais: iniciar autorização, concluir autorização, validar/normalizar entrega, recuperar dados apenas quando permitido, revogar e consultar estado local. Implementações GarminOfficialProvider e GarminMockProvider. DTOs internos descrevem identidade de origem, revisão, timestamp, unidades, disponibilidade e evidência de proveniência; o domínio não importa DTO Garmin.
 
 Mock usa identificadores próprios, relógio controlável e dados isSynthetic=true/source=garmin_mock. Simula sucesso, recusa, expiração, duplicata, atualização, atraso, entrega fora de ordem, payload inválido, indisponibilidade e revogação. Não acessa contas reais. Inicialização de produção falha se provider mock estiver habilitado; seeds nunca criam conexão oficial.
 
 ## Convite e autorização
+
 ```mermaid
 sequenceDiagram
   participant C as Coach autenticado
@@ -48,6 +51,7 @@ Token de convite com pelo menos 32 bytes aleatórios criptograficamente seguros;
 State imprevisível, expira e é consumido atomicamente; PKCE e detalhes OAuth conforme documentação oficial. Vincular tentativa a coach, athlete, conexão e navegador. Callback não aceita athleteId/coachId livres para reassociação. Revalidar vínculo/consentimento antes de salvar tokens; callback repetido não cria outra conexão. Em falha/recusa, manter estado recuperável e não exibir sucesso; refresh concorrente deve ser serializado. Tokens nunca chegam ao browser ou logs.
 
 ## Ingestão e processamento
+
 1. Validar tamanho, formato, autenticidade e replay conforme contrato oficial. Sem mecanismo confirmado de autenticidade, ingestão oficial permanece desabilitada; não inventar HMAC.
 2. Resolver destinatário por conexão autorizada, sem confiar em coachId fornecido pelo emissor. Eventos desconhecidos vão para quarentena com retenção curta; não criar aluno automaticamente.
 3. Persistir inbox e job na mesma transação, usando fila transacional PostgreSQL ou outbox se a biblioteca não compartilhar transação. Acknowledgement apenas depois da durabilidade, segundo exigência oficial; banco indisponível resulta em falha retriável conforme contrato.
@@ -60,15 +64,19 @@ State imprevisível, expira e é consumido atomicamente; PKCE e detalhes OAuth c
 Retry proposto: backoff exponencial com jitter, máximo de cinco tentativas para erros transitórios, respeitando limites externos; autenticação inválida exige reconexão, payload inválido vai para quarentena. Dead-letter persistida com código sanitizado e reprocessamento autorizado/auditado. Não executar polling de histórico sem direito contratual. Conciliação deve usar somente capacidades efetivamente aprovadas.
 
 ## IA e rastreabilidade
+
 Prompt recebe dados mínimos normalizados, não credenciais, nome, e-mail ou localização por padrão. Saída estruturada diferencia fato, evento, hipótese e recomendação; valida evidências e rejeita métricas ausentes ou referências não autorizadas. Notas do coach são conteúdo não confiável para instruções ao modelo. Perguntas históricas usam consultas autorizadas prévias, sem SQL livre gerado pelo modelo. Resposta cita atividade/revisão/intervalo; quando faltar dado, informa insuficiência. Provider, política de retenção, custos e transferência de dados aguardam escolha.
 
 ## Desconexão e exclusão
+
 Desconexão local bloqueia novas ingestões e jobs imediatamente e limpa/revoga tokens conforme contrato. Falha externa mantém revogação pendente, com retry e visibilidade. Revogação notificada pela Garmin deve invalidar conexão/sessões de autorização. Separar fim do vínculo, retirada de consentimento e revogação Garmin. Exclusão remove derivados e payloads conforme política, cancela jobs e mantém somente evidência mínima legalmente justificada; eventos tardios não ressuscitam dados.
 
 ## Checklist antes do provider oficial
+
 Confirmar programa/plano, acesso e contrato, protocolo e URLs oficiais, scopes mínimos, PKCE/refresh, autenticação de entregas e retries, IDs/revisões, formatos/amostras disponíveis, limites, replays, histórico, revogação e restrições de múltiplas conexões. Testar sandbox/ambiente autorizado e deidentificar fixtures conforme termos. Sem essas respostas, apenas o mock pode sustentar desenvolvimento local.
 
 ## Aluno após a conexão e evolução futura
+
 Na SPRINT 03, projetar mecanismo público seguro de retirada de autorização e solicitação de encerramento, com token de finalidade restrita e confirmação de identidade, sem conta de dashboard. Na SPRINT 04, integrar suas consequências à desconexão e aos jobs. Não reutilizar capability expirada de onboarding para gestão permanente.
 
 SPRINT 05 admite importação manual de FIT para desenvolvimento, separada de sincronização oficial. Validar formato com parser mantido, tamanho máximo, quantidade de amostras, tempo/memória de processamento e checksum; tratar arquivo como não confiável, não usar nome enviado como caminho e não persistir GPS sem necessidade. Fonte `manual_fit` indica upload, não prova de origem/autenticidade Garmin ou veracidade das medições. Idempotência por tenant/arquivo e identificação de possíveis duplicatas com sincronização precisam de regra explícita, sem descartar silenciosamente atividades por similaridade.

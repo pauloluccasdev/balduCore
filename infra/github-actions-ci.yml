@@ -1,0 +1,48 @@
+name: Foundation checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.7-bookworm
+        env:
+          POSTGRES_USER: balducore
+          POSTGRES_PASSWORD: local_dev_only
+          POSTGRES_DB: balducore
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U balducore -d balducore"
+          --health-interval=5s --health-timeout=3s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: cp .env.example .env
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm test:integration
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: foundation-browser-results
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

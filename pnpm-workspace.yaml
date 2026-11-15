@@ -1,0 +1,9 @@
+packages:
+  - apps/*
+allowBuilds:
+  '@nestjs/core': false
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  prisma: true
+  sharp: true
+  unrs-resolver: true
