@@ -1,0 +1,9 @@
+// A fundação só consulta saúde do banco. Tabelas de domínio entram nas sprints autorizadas.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
