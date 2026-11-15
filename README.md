@@ -64,7 +64,7 @@ Produção local de teste após build: `pnpm --filter @balducore/api start` e `p
 
 ## Prisma e migrations
 
-Schema configurado sem tabelas artificiais de domínio. Nesta sprint, Prisma faz `SELECT 1` para readiness, usando adapter PostgreSQL da linha 7. O client é gerado, não versionado. Não existe migration de negócio nesta etapa.
+Schema configurado sem tabelas artificiais de domínio. Nesta sprint, Prisma faz `SELECT 1` para readiness, usando adapter PostgreSQL da linha 7. O client é gerado, não versionado. Os tipos next-env.d.ts também são gerados pelo Next e ignorados no Git; as regras do agente ficam no AGENTS.md da raiz. Não existe migration de negócio nesta etapa.
 
 Quando uma sprint exigir persistência: adicionar apenas os modelos aprovados, executar `pnpm db:migrate --name nome_da_mudanca`, revisar SQL e versionar `apps/api/prisma/migrations/`. Em implantação, aplicar migrations existentes com `pnpm db:deploy`; não usar migrate dev em produção. Backup e restauração serão ensaiados antes do piloto.
 

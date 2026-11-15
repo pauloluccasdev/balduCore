@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
   poweredByHeader: false,
+  // Regras permanentes do projeto são mantidas no AGENTS.md da raiz.
+  agentRules: false,
   async rewrites() {
     return [
       { source: '/api/:path*', destination: 'http://127.0.0.1:3001/:path*' },

@@ -9,3 +9,4 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 apps/api/src/generated/
+**/next-env.d.ts
