@@ -590,9 +590,16 @@ test('integridade de tenant/aluno nos consentimentos; reemissão e expiração d
           athleteId: c.athlete.id,
           enrollmentId: enrollment.id,
           documentId: student.session.documents[0].id,
-          decision: 'accepted',
+          decision: 'withdrawn',
         },
       }),
+      (error: unknown) =>
+        Boolean(
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'P2003',
+        ),
     );
     await assert.rejects(
       app.database.client.consentEvidence.create({
@@ -601,9 +608,16 @@ test('integridade de tenant/aluno nos consentimentos; reemissão e expiração d
           athleteId: otherAthlete.id,
           enrollmentId: enrollment.id,
           documentId: student.session.documents[0].id,
-          decision: 'accepted',
+          decision: 'withdrawn',
         },
       }),
+      (error: unknown) =>
+        Boolean(
+          error &&
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'P2003',
+        ),
     );
     const firstSessionResponse = await c.post('/public/withdrawal/redeem', {
       token: new URL(firstLink).hash.slice(1),
