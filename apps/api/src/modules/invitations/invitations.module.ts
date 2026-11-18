@@ -1,3 +1,4 @@
+import type { IntegrationQueue } from '../activity-processing/queue.js';
 import { Module, type DynamicModule } from '@nestjs/common';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import type { Config } from '../../config.js';
@@ -14,6 +15,7 @@ export class InvitationsModule {
     client: PrismaClient,
     config: Config,
     provider?: IdentityProvider,
+    queue?: IntegrationQueue,
   ): DynamicModule {
     // Verificação fictícia nunca é disponibilizada com identidades Google ou em produção.
     const demo =
@@ -28,7 +30,7 @@ export class InvitationsModule {
         ? [
             {
               provide: InvitationsService,
-              useValue: new InvitationsService(client, config),
+              useValue: new InvitationsService(client, config, queue),
             },
           ]
         : [],

@@ -6,6 +6,7 @@ const server = await createTestApp(
   3001,
   'http://127.0.0.1:3000',
   process.env.E2E_AUTH_MODE === 'demo' ? 'demo' : 'google',
+  true,
 );
 // Relacionamentos de E2E usam identidades sintéticas; dados reais nunca são seeds.
 for (const signal of ['SIGINT', 'SIGTERM'] as const)

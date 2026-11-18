@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { createGarminRuntime } from './modules/garmin-connections/runtime.js';
+import { GarminModule } from './modules/garmin-connections/garmin.module.js';
 import { randomUUID } from 'node:crypto';
 import {
   Module,
@@ -51,15 +53,27 @@ export async function createApp(
     client: PrismaClient;
     config: Config;
     provider?: IdentityProvider;
+    garmin?: Awaited<ReturnType<typeof createGarminRuntime>>;
   },
 ) {
+  const garmin = features
+    ? (features.garmin ??
+      (await createGarminRuntime(features.client, features.config, logger)))
+    : undefined;
   @Module({
     imports: features
       ? [
+          GarminModule.register(
+            features.client,
+            features.config,
+            garmin!.service,
+            features.provider,
+          ),
           InvitationsModule.register(
             features.client,
             features.config,
             features.provider,
+            garmin?.service.queue,
           ),
           AthletesModule.register(
             features.client,
@@ -73,7 +87,15 @@ export async function createApp(
       { provide: DATABASE, useValue: database },
       {
         provide: 'DATABASE_LIFECYCLE',
-        useValue: { onApplicationShutdown: () => database.close() },
+        useValue: {
+          onApplicationShutdown: async () => {
+            try {
+              await garmin?.close();
+            } finally {
+              await database.close();
+            }
+          },
+        },
       },
     ],
   })
@@ -81,6 +103,10 @@ export async function createApp(
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: false,
     bodyParser: false,
+    rawBody: true,
+  }).catch(async (error: unknown) => {
+    await garmin?.close();
+    throw error;
   });
   app.useGlobalFilters(new SanitizedErrors());
   app.getHttpAdapter().getInstance().disable('x-powered-by');
@@ -114,7 +140,7 @@ export async function createApp(
       .setDescription(
         'Autenticação e alunos do treinador; convites/aceites públicos apenas no demo local. Cookies e CSRF próprios em cada jornada.',
       )
-      .setVersion('0.3.0')
+      .setVersion('0.4.0')
       .addCookieAuth(
         'balducore_session',
         { type: 'apiKey', in: 'cookie' },

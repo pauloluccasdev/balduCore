@@ -1102,3 +1102,20 @@ tbody tr:last-child td {
     gap: 18px;
   }
 }
+
+.invitation-panel select {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.invitation-panel details .athlete-form {
+  margin-top: 14px;
+}
+.invitation-panel > .badge {
+  justify-self: start;
+}

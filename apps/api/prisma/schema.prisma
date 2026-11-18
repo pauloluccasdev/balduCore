@@ -75,6 +75,7 @@ model CoachAthleteRelationship {
   invitations Invitation[]
   consents ConsentEvidence[]
   withdrawalAccesses WithdrawalAccess[]
+  garminConnection GarminConnection?
   @@unique([coachId, athleteId])
   @@index([coachId, status])
 }
@@ -107,6 +108,7 @@ model Invitation {
   athleteId String
   relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
   recipientEmail String
+  purpose String @default("accompaniment")
   tokenHash String @unique
   expiresAt DateTime
   consumedAt DateTime?
@@ -134,6 +136,7 @@ model EnrollmentSession {
   acceptedAt DateTime?
   createdAt DateTime @default(now())
   evidences ConsentEvidence[]
+  garminAuthorizations GarminAuthorizationAttempt[]
   @@unique([coachId, athleteId, invitationId])
   @@unique([coachId, athleteId, id])
   @@unique([coachId, id])
@@ -182,4 +185,121 @@ model WithdrawalAccess {
   revokedAt DateTime?
   createdAt DateTime @default(now())
   @@index([coachId, athleteId])
+}
+
+enum GarminStatus {
+  not_connected
+  awaiting_authorization
+  connected
+  error
+  disconnected
+}
+
+enum IntegrationEventStatus {
+  queued
+  processing
+  retry
+  processed
+  ignored
+  failed
+  cancelled
+}
+
+model GarminConnection {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  provider String @default("garmin_mock")
+  isSynthetic Boolean @default(true)
+  status GarminStatus @default(not_connected)
+  generation Int @default(0)
+  externalAccountHash String? @unique
+  encryptedCredentials String?
+  keyVersion String @default("local-v1")
+  tokenExpiresAt DateTime?
+  credentialVersion Int @default(0)
+  refreshLease String?
+  refreshLeaseUntil DateTime?
+  revocationStatus String @default("none")
+  lastReceivedAt DateTime?
+  lastSyncedAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorizations GarminAuthorizationAttempt[]
+  events IntegrationEvent[]
+  activities Activity[]
+  @@unique([coachId, athleteId])
+  @@unique([coachId, athleteId, id])
+}
+
+model GarminAuthorizationAttempt {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  connectionId String
+  connection GarminConnection @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  enrollmentId String
+  enrollment EnrollmentSession @relation(fields: [coachId, athleteId, enrollmentId], references: [coachId, athleteId, id], onDelete: Restrict)
+  stateHash String @unique
+  browserHash String
+  generation Int
+  expiresAt DateTime
+  consumedAt DateTime?
+  outcome String?
+  @@index([expiresAt])
+}
+
+model IntegrationEvent {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  connectionId String
+  connection GarminConnection @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  generation Int
+  kind String
+  deliveryId String
+  payloadHash String
+  encryptedPayload String?
+  namespace String
+  jobId String?
+  runToken String?
+  leaseUntil DateTime?
+  status IntegrationEventStatus @default(queued)
+  attempts Int @default(0)
+  errorCode String?
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+  @@unique([connectionId, generation, kind, deliveryId])
+  @@index([coachId, athleteId, createdAt])
+  @@index([namespace, status])
+}
+
+// Envelope mínimo da SPRINT 04; detalhes esportivos e consultas entram na 05.
+model Activity {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  connectionId String
+  connection GarminConnection @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  generation Int
+  externalId String
+  revision Int
+  source String @default("garmin_mock")
+  isSynthetic Boolean @default(true)
+  sport String
+  startedAt DateTime
+  durationSeconds Float?
+  distanceMeters Float?
+  dataHash String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([connectionId, generation, externalId])
+  @@index([coachId, athleteId, startedAt])
+}
+
+model WorkerHeartbeat {
+  name String @id
+  seenAt DateTime
 }

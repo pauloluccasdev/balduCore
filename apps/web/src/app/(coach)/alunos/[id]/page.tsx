@@ -1,3 +1,8 @@
+import { GarminPanel } from '../../../../features/garmin/garmin-panel';
+import {
+  garminLabels,
+  type GarminSnapshot,
+} from '../../../../features/garmin/types';
 import Link from 'next/link';
 import { InvitationPanel } from '../../../../features/invitations/invitation-panel';
 import { notFound } from 'next/navigation';
@@ -12,8 +17,9 @@ export default async function Profile({
 }) {
   const session = await requireCoach();
   const { id } = await params;
-  const [response, invitationsResponse] = await Promise.all([
+  const [response, garminResponse, invitationsResponse] = await Promise.all([
     serverApi(`/athletes/${encodeURIComponent(id)}`),
+    serverApi(`/athletes/${encodeURIComponent(id)}/garmin`),
     session.mode === 'demo'
       ? serverApi(`/athletes/${encodeURIComponent(id)}/invitations`)
       : Promise.resolve(null),
@@ -21,6 +27,9 @@ export default async function Profile({
   if (response.status === 404) notFound();
   if (!response.ok) throw new Error('Não foi possível carregar o perfil.');
   const athlete: Athlete = await response.json();
+  if (!garminResponse.ok)
+    throw new Error('Não foi possível carregar integração.');
+  const garmin: GarminSnapshot = await garminResponse.json();
   if (invitationsResponse && !invitationsResponse.ok)
     throw new Error('Não foi possível carregar convites.');
   const invitations = invitationsResponse
@@ -52,12 +61,19 @@ export default async function Profile({
               />
             </Card>
           )}
+          <Card title="Conexão e sincronização">
+            <GarminPanel
+              athleteId={athlete.id}
+              relationshipStatus={athlete.relationship?.status ?? 'pending'}
+              initial={garmin}
+            />
+          </Card>
           <Card title="Histórico esportivo">
             <div className="empty-state">
               <p>
-                Atividades e análises estarão disponíveis após a integração
-                esportiva. Nenhum dado demonstrativo é associado a este
-                cadastro.
+                O histórico detalhado de atividades estará disponível em uma
+                próxima etapa. Os recebimentos simulados aparecem na seção de
+                conexão e sincronização.
               </p>
             </div>
           </Card>
@@ -67,7 +83,7 @@ export default async function Profile({
             <dt>Vínculo esportivo</dt>
             <dd>{statusLabel[athlete.relationship?.status ?? 'pending']}</dd>
             <dt>Garmin</dt>
-            <dd>Não conectada</dd>
+            <dd>{garminLabels[garmin.status]}</dd>
           </dl>
           <p className="muted small">
             Vínculo e autorização Garmin são independentes. O aceite será feito

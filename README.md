@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINT 03 em revisão: login demonstrativo local, gestão de alunos, convites seguros, página pública de aceites e encerramento do vínculo. Integração Google/OIDC preparada para ativação futura. Dashboard continua demonstrativo e identificado. Garmin, FIT e IA real entram em sprints posteriores.
+SPRINT 04 em revisão: fundação, login demonstrativo, alunos/convites/aceites e integração Garmin mock com processamento assíncrono. SPRINTS 01–03 mescladas. Google real e provider Garmin oficial permanecem desabilitados/adiados; dashboard continua demonstrativo. Histórico detalhado, FIT, análises e IA entram nas próximas sprints.
 
 ## Execução local
 
@@ -84,7 +84,66 @@ API local (prefixo `/api` no proxy Next):
 | GET `/public/withdrawal`                              | Consultar sessão de encerramento e CSRF.                            |
 | POST `/public/withdrawal/confirm`                     | Retirar aceites e encerrar vínculo atomicamente.                    |
 
-POST públicos exigem Origin exata; depois do resgate também exigem o CSRF da sessão pública correspondente. Cookies `balducore_enrollment` e `balducore_withdrawal` são distintos do cookie de coach, HttpOnly/SameSite=Lax e exclusivos do demo local. Tokens não aparecem nas respostas de sessão. Respostas usam no-store. Limites: 30 operações públicas/minuto/IP/origem e 120 consultas de sessão; 30 escritas de convite por coach/minuto/IP. O proxy local compartilha IP; revisar topologia antes de escala.
+POST públicos exigem Origin exata; depois do resgate também exigem o CSRF da sessão pública correspondente. Cookies `balducore_enrollment` e `balducore_withdrawal` são distintos do cookie de coach, HttpOnly/SameSite=Lax e exclusivos do demo local. Tokens não aparecem nas respostas de sessão. Respostas usam no-store. Limites: 30 operações por capability válida/minuto/IP/origem, bootstrap de 30/minuto/IP e 120 consultas de sessão; 30 escritas de convite por coach/minuto/IP. O proxy local compartilha IP; revisar topologia antes de escala.
+
+## Garmin mock e processamento — SPRINT 04
+
+Nenhuma conta Garmin real é acessada. A implementação oficial depende de aprovação, credenciais e documentação autorizada; não basta trocar uma variável para ativá-la. A configuração padrão GARMIN_PROVIDER=disabled mantém login/alunos/convites executáveis sem a fila.
+
+Para testar o mock local após aplicar migrations:
+
+```bash
+pnpm garmin:setup
+pnpm dev
+```
+
+`garmin:setup` exige `.env` com AUTH_MODE=demo, origem/bind locais e ambiente fora de produção. Gera chaves de 32 bytes para GARMIN_TOKEN_KEY e GARMIN_MOCK_SIGNING_KEY no `.env` ignorado, preserva chaves existentes válidas e não as imprime. Não altera credenciais Google, não envia dados nem cria autorização real. Reiniciar API/worker após mudar a configuração. Não versionar o `.env` ou compartilhar as chaves.
+
+`pnpm dev` faz um build inicial da API e inicia três processos: Nest, Next e worker do mesmo backend. O worker fica ocioso quando o mock está desabilitado. Para processos separados, após `pnpm build`:
+
+```bash
+pnpm --filter @balducore/api start
+pnpm --filter @balducore/web start
+pnpm --filter @balducore/api worker
+```
+
+Executar cada comando em um terminal. API e worker leem o mesmo `.env`, banco, GARMIN_QUEUE_NAMESPACE e chaves; manter esses valores estáveis. pg-boss 12.38.2 usa schema próprio no mesmo PostgreSQL, sem Redis. Instalação/migração automática do schema da biblioteca é restrita ao mock local; produção oficial exige plano de migração/deploy aprovado. Migrations Prisma continuam versionadas em prisma/migrations. O usuário local do banco precisa criar schema/tabelas da fila.
+
+Fluxo manual:
+
+1. Gerar convite para aluno fictício e completar código/aceites da SPRINT 03.
+2. Na confirmação pública, clicar **Simular autorização Garmin**. A tela `/garmin/mock` identifica o simulador BalduCore e permite autorizar/recusar; não pede senha Garmin. State de uso único expira em dez minutos e é vinculado ao navegador/enrollment.
+3. Autorizar e abrir/recarregar o perfil do aluno no coach. **Conectada · simulação** é independente do vínculo ativo; ainda não significa atividade recebida.
+4. Abrir **Ferramentas de teste local**, selecionar cenário e **Simular evento de teste**. Recebimento fica na fila e o worker processa posteriormente; atualizar integração acompanha o estado e a contagem de atividades sintéticas. O painel atualiza periodicamente enquanto há processamento pendente.
+5. Testar entrega repetida/atualização/versão antiga, erro temporário/permanente, dados inválidos, renovação de token e revogação. A duplicata usa entrega fixa, atividade usa externo fixo e revisão determinística para testar idempotência; não gera uma nova corrida real a cada clique.
+6. Falha transitória retenta com backoff (até cinco tentativas, atraso inicial de um segundo). Falhas permanentes/exauridas ficam registradas para revisão; **Reprocessar falha** só funciona para o dono e recurso ainda elegível. Dados inválidos continuam inválidos após redrive.
+7. Confirmar **Desconectar integração simulada** bloqueia coleta/publicação imediatamente e mantém vínculo esportivo ativo. Revogação fica pendente até o worker concluir; falha externa não reativa acesso. **Falha temporária na revogação** configura duas falhas de teste antes de desconectar. Encerramento pelo link público da 03 também desconecta, além de encerrar o vínculo.
+8. Para reconectar após expirar a jornada inicial, coach de vínculo ativo gera **Link para conexão de teste**. Nova verificação por código demonstrativo é obrigatória; propósito Garmin preserva aceites anteriores e não permite reativar vínculo encerrado. Código aparece em **Atualizar convites**. Links anteriores são revogados; retirar acompanhamento continua usando capability de encerramento separada.
+
+Configurações na sidebar mostra conta, integração oficial indisponível, mock/worker e conexões do próprio treinador. Perfil/lista refletem estados persistidos. A SPRINT 04 guarda apenas envelope mínimo de Activity, sem página de histórico, FIT, séries temporais, insights ou IA.
+
+API (prefixo `/api` no Next):
+
+| Método/caminho                                    | Autorização/finalidade                                                 |
+| ------------------------------------------------- | ---------------------------------------------------------------------- |
+| GET `/garmin`                                     | Coach: resumo limitado às próprias conexões (até 100).                 |
+| GET `/athletes/:id/garmin`                        | Coach dono: estado, últimas 15 entregas, falhas e contagem autorizada. |
+| POST `/athletes/:id/garmin/authorization-link`    | Coach dono + CSRF: convite de conexão de aluno ativo com aceites.      |
+| POST `/athletes/:id/garmin/disconnect`            | Coach dono + CSRF: bloqueio imediato e revogação assíncrona.           |
+| POST `/athletes/:id/garmin/events/:eventId/retry` | Coach dono + CSRF: redrive de falha elegível.                          |
+| POST `/athletes/:id/garmin/mock`                  | Coach dono + CSRF, mock local: cenário estrito.                        |
+| GET `/public/garmin`                              | Capability de jornada aceita/verificada, estado e CSRF próprios.       |
+| POST `/public/garmin/start`                       | Capability + Origin/CSRF: tentativa vinculada ao aluno/navegador.      |
+| POST `/public/garmin/mock/finish`                 | Capability + Origin/CSRF: state e decision approve/deny.               |
+| POST `/integrations/garmin-mock/events`           | Entrega mock assinada; não é endpoint Garmin oficial.                  |
+
+Contrato de entrega local documentado em [Garmin](docs/integrations/garmin.md). Header de timestamp, HMAC do corpo bruto, janela de cinco minutos e JSON de até 16 KiB; eventos resolvem conexão por conta conhecida, sem IDs de coach/aluno livres. ACK 202 só confirma inbox/job duráveis. Nenhum segredo de assinatura deve ir ao browser; as ferramentas do coach fazem a geração/validação no backend.
+
+Credenciais/snapshots são AES-GCM com chave externa ao banco; jobs carregam só eventId. Refresh tem lease/versionamento, e publicação tem generation/runToken/leaseUntil. Disconnect/retirada cancelam publicação elegível; reentrega ou worker atrasado não restauram autorização. Payload de atividade é limpo após sucesso/cancelamento e material de revogação após sucesso. Falhas ficam cifradas para revisão; retenção/exclusão produtiva ainda não definida. Não rotacionar chaves ou namespace silenciosamente: jobs pendentes precisam da chave original e de um plano de migração. AUTH_SECRET efêmero continua independente das chaves Garmin.
+
+Readiness HTTP verifica banco; heartbeat do worker tem validade de 15 segundos e aparece separado no perfil/Configurações. API pode receber com worker offline; nesse caso os jobs aguardam. Reiniciar o worker recupera execução expirada (prazo de 30 segundos) e intenção durável sem job. Esta entrega valida um worker operacional por namespace; a fila suporta claims concorrentes e testes exercitam fencing/recuperação, sem antecipar infraestrutura distribuída.
+
+Limites: escritas do coach 30/minuto; mutações públicas por capability válida/IP 30/minuto; leitura pública de estado 120/minuto/IP; entregas mock 120/minuto/IP. O proxy local compartilha IP. A autenticação e as páginas públicas originais preservam controles separados; bootstrap de convite usa 30/minuto/IP e mutações posteriores usam limite por capability válida.
 
 ## Configurar login Google real — etapa futura
 
@@ -120,7 +179,7 @@ Limites compartilhados no PostgreSQL: 15 inícios de login/minuto, 30 callbacks/
 
 ## Migrations e operação
 
-Migrations versionadas em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria, buckets de limite e, na SPRINT 03, Invitation, EnrollmentSession, ConsentDocument, ConsentEvidence e WithdrawalAccess. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
+Migrations versionadas em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria, buckets de limite e, na SPRINT 03, Invitation, EnrollmentSession, ConsentDocument, ConsentEvidence e WithdrawalAccess. SPRINT 04 acrescenta GarminConnection, GarminAuthorizationAttempt, IntegrationEvent, Activity mínima e WorkerHeartbeat; pg-boss mantém schema próprio. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
 
 ```bash
 pnpm db:deploy
@@ -154,7 +213,7 @@ Integração também valida convites, resgate/aceite/encerramento concorrentes, 
 ## Estrutura e identidade visual
 
 - apps/web: páginas públicas/protegidas, componentes, tokens e fixtures do dashboard.
-- apps/api: Nest modular Auth/Athletes/Invitations/Consents, Prisma, operação e testes.
+- apps/api: Nest modular Auth/Athletes/Invitations/Consents/Garmin/ActivityProcessing, worker, Prisma e testes.
 - infra: Compose, inicialização do banco de testes e modelo de CI.
 - docs: arquitetura, domínio, decisões, roadmap e oito PNGs originais.
 
@@ -166,4 +225,4 @@ Docker indisponível no WSL usado durante a entrega: testes locais usaram Postgr
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 
-Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md) e [roadmap](docs/roadmap.md). Entrega da SPRINT 03 em revisão; merge e SPRINT 04 dependem de autorização.
+Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–03 mescladas; SPRINT 04 em revisão. Merge e SPRINT 05 dependem de autorização.

@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { mutate } from '../../lib/client-api';
 import { Badge } from '../../components/ui';
@@ -9,6 +9,7 @@ export type Invitation = {
   status: 'pending' | 'used' | 'expired' | 'revoked';
   expiresAt: string;
   acceptedAt: string | null;
+  purpose?: string;
   demoCode: string | null;
   codeExpiresAt: string | null;
   codeUnavailable: boolean;
@@ -19,15 +20,20 @@ const labels = {
   expired: 'Expirado',
   revoked: 'Revogado',
 };
-export function ShareLink({ url }: { url: string }) {
+export function ShareLink({
+  url,
+  label = 'Link exclusivo — guarde antes de sair desta página',
+}: {
+  url: string;
+  label?: string;
+}) {
+  const id = useId();
   const [copied, setCopied] = useState(false);
   return (
     <div className="share-link">
-      <label htmlFor="generated-link">
-        Link exclusivo — guarde antes de sair desta página
-      </label>
+      <label htmlFor={id}>{label}</label>
       <textarea
-        id="generated-link"
+        id={id}
         rows={3}
         readOnly
         value={url}
@@ -171,7 +177,9 @@ export function InvitationPanel({
             ) : (
               item.status === 'used' && (
                 <p className="small muted">
-                  Link resgatado; acompanhamento ainda não aceito.
+                  {item.purpose === 'garmin'
+                    ? 'Link de conexão resgatado; aceite esportivo anterior preservado.'
+                    : 'Link resgatado; acompanhamento ainda não aceito.'}
                 </p>
               )
             )}

@@ -7,7 +7,7 @@
     "node": ">=24.11.0 <25"
   },
   "scripts": {
-    "dev": "concurrently -k -n api,web \"pnpm --filter @balducore/api dev\" \"pnpm --filter @balducore/web dev\"",
+    "dev": "pnpm --filter @balducore/api build && concurrently -k -n api,web,worker \"pnpm --filter @balducore/api dev:compiled\" \"pnpm --filter @balducore/web dev\" \"pnpm --filter @balducore/api worker:dev\"",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
@@ -22,7 +22,8 @@
     "db:up": "docker compose --env-file .env -f infra/compose.yaml up -d --wait",
     "db:down": "docker compose --env-file .env -f infra/compose.yaml down",
     "db:test:deploy": "node scripts/test-database.mjs",
-    "test:e2e:demo": "playwright test --config playwright.demo.config.ts"
+    "test:e2e:demo": "playwright test --config playwright.demo.config.ts",
+    "garmin:setup": "pnpm --filter @balducore/api garmin:setup"
   },
   "devDependencies": {
     "typescript": "6.0.3",

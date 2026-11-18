@@ -1,6 +1,6 @@
 # BalduCore — MVP 1 (operação inicial BalduTraining)
 
-Status: discovery/fundação aprovados; SPRINTS 02 e 03 implementadas em revisão. Atualização: 2026-11-18.
+Status: SPRINTS 00–03 aprovadas e mescladas; SPRINT 04 implementada em revisão. Atualização: 2026-11-18.
 
 ## Objetivo e usuários
 
@@ -92,8 +92,12 @@ Aceite ativa o vínculo, não a conexão Garmin. Sincronização é eventual; co
 
 ## Gate desta entrega
 
-SPRINTS 00 e 01 aprovadas e mescladas. SPRINT 02 autorizada e implementada para revisão: login Google/OIDC e gestão de alunos isolados por treinador, com login fictício local autorizado para os testes atuais; ativação Google real adiada. SPRINT 03 autorizada com verificação/aceites demonstrativos e encerramento do vínculo; entrega em revisão. SPRINTS 04–11 não autorizadas. Textos jurídicos reais, retenção produtiva, verificação real do aluno e acesso Garmin permanecem pendentes.
+SPRINTS 00–03 aprovadas e mescladas. SPRINT 02 entregou: login Google/OIDC e gestão de alunos isolados por treinador, com login fictício local autorizado para os testes atuais; ativação Google real adiada. SPRINT 03 entregou verificação/aceites demonstrativos e encerramento do vínculo. SPRINT 04 autorizada para infraestrutura Garmin/mock, implementada em revisão; SPRINTS 05–11 não autorizadas. Textos jurídicos reais, retenção produtiva, verificação real do aluno e acesso Garmin permanecem pendentes.
 
 ## Entrega demonstrativa de convites — SPRINT 03
 
 Convite de aluno preexistente, nome/e-mail fictícios, código simulado consultável apenas pelo coach dono, aceites independentes versionados e confirmação com Garmin não conectada. Página pública sem sidebar/conta de treinador, nos dois temas e responsiva. Convite de 48 horas, resgate único para jornada de 30 minutos e código de dez minutos/cinco erros. Reemissão e alteração de destinatário revogam acessos pendentes. Retirada pública dos aceites encerra vínculo e mantém histórico; acesso de encerramento separado, de sete dias, com recuperação por reemissão manual pelo coach. Tudo limitado ao demo local; não há e-mail, termos reais ou integração oficial antecipados. Ver [ADR-003](../decisions/adr-003-invitations-consents.md).
+
+## Entrega demonstrativa Garmin — SPRINT 04
+
+Após aceites, aluno pode autorizar/recusar conexão fictícia em simulador explicitamente BalduCore, sem conta real Garmin. Coach acompanha estados no perfil/lista/Configurações e pode simular recebimentos/falhas; dados chegam ao envelope mínimo por worker assíncrono, com duplicidade/revisões controladas. Vínculo ativo, conexão autorizada e atividade recebida são estados distintos. Desconexão mantém vínculo; retirada do acompanhamento encerra vínculo e bloqueia conexão imediatamente. Revogação de teste pendente/falha permanece visível e não permite nova coleta. Recuperação de conexão usa novo convite restrito e verificação demo, sem duplicar aceites ou criar portal. Histórico e análises detalhados continuam futuros. Integração oficial bloqueada até aprovação/documentação/credenciais.

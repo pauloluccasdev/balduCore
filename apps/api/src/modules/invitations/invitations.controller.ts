@@ -12,7 +12,13 @@ import {
 import { ApiBody, ApiCookieAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from '../auth/auth.service.js';
-import { cookie, csrfFor, equal, readCookie } from '../auth/security.js';
+import {
+  cookie,
+  csrfFor,
+  digest,
+  equal,
+  readCookie,
+} from '../auth/security.js';
 import { InvitationsService } from './invitations.service.js';
 
 @ApiTags('Convites demonstrativos')
@@ -99,7 +105,13 @@ export class PublicInvitationsController {
       )
         throw new ForbiddenException('Requisição não autorizada.');
     }
-    await this.auth.rateLimit(request, 'public-invitations', 30);
+    await this.auth.rateLimit(
+      request,
+      name
+        ? `public-invitations:${digest(this.token(request, name))}`
+        : 'public-invitations-bootstrap',
+      30,
+    );
   }
   @Post('invitation/preview')
   @ApiBody({

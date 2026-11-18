@@ -1,6 +1,6 @@
 # Arquitetura inicial
 
-Status: arquitetura-base aprovada; SPRINT 01 mesclada e SPRINT 02 implementada em revisão. Atualização: 2026-11-15. Decisão de stack: [ADR-001](../decisions/adr-001-stack.md).
+Status: arquitetura-base aprovada; SPRINTS 00–03 mescladas e SPRINT 04 implementada em revisão. Atualização: 2026-11-18. Decisões: [ADR-001](../decisions/adr-001-stack.md) e [ADR-004](../decisions/adr-004-garmin-processing.md).
 
 ## Diagnóstico
 
@@ -139,3 +139,13 @@ AUTH_MODE=demo registra entrada local com identidades fixas e issuer próprio. R
 InvitationsModule expõe emissão/revogação ao coach dono e uma jornada pública independente. ConsentsService mantém documentos demonstrativos imutáveis e evidências de aceite/retirada. InvitationsService coordena transações de vínculo e consentimentos, usando lock do relacionamento compartilhado com edição do cadastro. Não há provider de e-mail, fila ou integração Garmin antecipados. Controllers demo ausentes no modo Google/produção; restrição local é validada no startup.
 
 Next renderiza `/convite` e `/encerrar` sem layout protegido/sidebar, usando o design system existente, dark/light e estados de confirmação/erro. Links carregam segredo no fragmento, removido no browser antes de resgate explícito. Cookies públicos HttpOnly e CSRF por capability não concedem principal de treinador. Página do perfil obtém cadastro/convites em paralelo via API autenticada, sem Prisma no frontend. Ver [ADR-003](../decisions/adr-003-invitations-consents.md) e README para limites demonstrativos e recuperação.
+
+## Evolução na SPRINT 04
+
+GarminModule concentra conexão, autorização e consultas restritas. ActivityProvider isola DTOs internos do mock; nenhum modelo/protocolo oficial é presumido. IntegrationQueue usa pg-boss 12.38.2/fromPrisma no mesmo PostgreSQL: inbox e job são criados na transação, sem Redis/outbox separado. Worker dedicado executa normalização mínima fora do ciclo HTTP, usando os mesmos casos de uso. SQL e rotas não são gerados por IA. API e worker usam chaves/namespace estáveis, pools separados e encerramento ordenado.
+
+GarminConnection guarda somente credenciais cifradas e hash de conta; attempts têm state/hash de navegador, escopo e geração. Refresh usa lease/versionamento, sem manter lock/transação durante chamada ao provider. IntegrationEvent guarda payload cifrado e estado operacional; pg-boss cuida de reivindicação/expiração/retries. Cada execução tem runToken/leaseUntil; resultado expirado exige retry e resultado antigo não altera uma execução nova. Publicação normalizada revalida geração/vínculo/aceites, usa unicidade/revisão e transação. Consumidor pode repetir após crash: não há promessa exactly-once.
+
+Disconnect transacional limpa credenciais ativas, incrementa geração, invalida tentativas e cancela publicação de atividades; revogação externa usa intenção cifrada própria e retentativas. A retirada pública da 03 chama esse mesmo caso de uso. Mesmo com mock desabilitado, a retirada mantém intenção durável; worker recupera intenções sem job ao ser habilitado. Autorização cancelada durante callback revoga o resultado do provider; falha na compensação gera intenção persistida.
+
+Configurações e perfil mostram processamento e mock; páginas públicas continuam sem sessão de coach. Convite de finalidade Garmin permite reconexão de aluno ativo com nova verificação demo e sem novos consentimentos. Leitura de atividades exige vínculo ativo; a SPRINT 04 expõe só contagem e estados de recebimento, não implementa a experiência de histórico da 05. Biblioteca gerencia seu schema apenas no ambiente mock local; deploy produtivo da fila e contrato oficial aguardam definição.

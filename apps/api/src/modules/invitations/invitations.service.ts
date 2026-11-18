@@ -1,3 +1,8 @@
+import type { IntegrationQueue } from '../activity-processing/queue.js';
+import {
+  disconnectInTransaction,
+  requireEligible,
+} from '../garmin-connections/lifecycle.js';
 import { createHmac, randomInt } from 'node:crypto';
 import {
   BadRequestException,
@@ -59,6 +64,7 @@ export class InvitationsService {
   constructor(
     private readonly db: PrismaClient,
     private readonly config: Config,
+    private readonly queue?: IntegrationQueue,
   ) {}
   private async lock(tx: Tx, coachId: string, athleteId: string) {
     const rows = await tx.$queryRaw<
@@ -111,6 +117,7 @@ export class InvitationsService {
             : null;
         return {
           id: item.id,
+          purpose: item.purpose,
           expiresAt: item.expiresAt,
           createdAt: item.createdAt,
           status:
@@ -135,13 +142,22 @@ export class InvitationsService {
       }),
     };
   }
-  async create(coachId: string, athleteId: string) {
+  async create(
+    coachId: string,
+    athleteId: string,
+    purpose: 'accompaniment' | 'garmin' = 'accompaniment',
+  ) {
     const token = randomToken();
     return this.db.$transaction(async (tx) => {
-      if ((await this.lock(tx, coachId, athleteId)) !== 'pending')
+      if (
+        (await this.lock(tx, coachId, athleteId)) !==
+        (purpose === 'garmin' ? 'active' : 'pending')
+      )
         throw new ConflictException(
-          'Somente vínculos pendentes podem receber convite.',
+          'O estado do vínculo não permite este tipo de convite.',
         );
+      if (purpose === 'garmin')
+        await requireEligible(tx, { coachId, athleteId });
       const athlete = await tx.athlete.findUniqueOrThrow({
         where: { coachId_id: { coachId, id: athleteId } },
       });
@@ -155,6 +171,7 @@ export class InvitationsService {
           coachId,
           athleteId,
           recipientEmail: athlete.email,
+          purpose,
           tokenHash: digest(token),
           expiresAt: new Date(Date.now() + INVITE_MS),
         },
@@ -208,7 +225,8 @@ export class InvitationsService {
       invite.revokedAt ||
       invite.consumedAt ||
       invite.expiresAt <= new Date() ||
-      invite.relationship.status !== 'pending' ||
+      invite.relationship.status !==
+        (invite.purpose === 'garmin' ? 'active' : 'pending') ||
       !invite.relationship.coach.enabled ||
       invite.recipientEmail !== invite.relationship.athlete.email
     )
@@ -231,7 +249,7 @@ export class InvitationsService {
       });
       const now = new Date();
       if (
-        status !== 'pending' ||
+        status !== (invite.purpose === 'garmin' ? 'active' : 'pending') ||
         invite.revokedAt ||
         invite.consumedAt ||
         invite.expiresAt <= now ||
@@ -303,6 +321,14 @@ export class InvitationsService {
   async session(sessionToken: string) {
     return this.db.$transaction(async (tx) => {
       const enrollment = await this.journey(tx, sessionToken);
+      const garmin = await tx.garminConnection.findUnique({
+        where: {
+          coachId_athleteId: {
+            coachId: enrollment.coachId,
+            athleteId: enrollment.invitation.athleteId,
+          },
+        },
+      });
       return {
         isSynthetic: true,
         verificationMode: 'demo',
@@ -310,9 +336,13 @@ export class InvitationsService {
         expiresAt: enrollment.expiresAt,
         codeExpiresAt: enrollment.codeExpiresAt,
         verified: Boolean(enrollment.verifiedAt),
-        accepted: Boolean(enrollment.acceptedAt),
+        accepted: Boolean(
+          enrollment.acceptedAt ||
+          (enrollment.invitation.purpose === 'garmin' && enrollment.verifiedAt),
+        ),
+        purpose: enrollment.invitation.purpose,
         documents: DEMO_DOCUMENTS,
-        garminStatus: 'not_connected',
+        garminStatus: garmin?.status ?? 'not_connected',
       };
     });
   }
@@ -371,11 +401,23 @@ export class InvitationsService {
       );
     return this.db.$transaction(async (tx) => {
       const enrollment = await this.journey(tx, sessionToken);
+      if (enrollment.invitation.purpose !== 'accompaniment')
+        throw new ConflictException(
+          'Convite de conexão não registra novo aceite de acompanhamento.',
+        );
+      const garmin = await tx.garminConnection.findUnique({
+        where: {
+          coachId_athleteId: {
+            coachId: enrollment.coachId,
+            athleteId: enrollment.invitation.athleteId,
+          },
+        },
+      });
       if (enrollment.acceptedAt)
         return {
           accepted: true,
           isSynthetic: true,
-          garminStatus: 'not_connected',
+          garminStatus: garmin?.status ?? 'not_connected',
           withdrawalUrl: null,
         };
       if (
@@ -417,7 +459,7 @@ export class InvitationsService {
       return {
         accepted: true,
         isSynthetic: true,
-        garminStatus: 'not_connected',
+        garminStatus: garmin?.status ?? 'not_connected',
         withdrawalUrl,
       };
     });
@@ -528,6 +570,12 @@ export class InvitationsService {
       if (access.consumedAt) return { ended: true, isSynthetic: true };
       if (access.relationship.status !== 'active') throw unavailable();
       await this.consents.withdraw(tx, access.coachId, access.athleteId);
+      await disconnectInTransaction(
+        tx,
+        access,
+        this.config.GARMIN_QUEUE_NAMESPACE,
+        this.queue,
+      );
       await tx.coachAthleteRelationship.update({
         where: {
           coachId_athleteId: {
