@@ -20,7 +20,9 @@
     "db:migrate": "pnpm --filter @balducore/api db:migrate",
     "db:deploy": "pnpm --filter @balducore/api db:deploy",
     "db:up": "docker compose --env-file .env -f infra/compose.yaml up -d --wait",
-    "db:down": "docker compose --env-file .env -f infra/compose.yaml down"
+    "db:down": "docker compose --env-file .env -f infra/compose.yaml down",
+    "db:test:deploy": "node scripts/test-database.mjs",
+    "test:e2e:demo": "playwright test --config playwright.demo.config.ts"
   },
   "devDependencies": {
     "typescript": "6.0.3",

@@ -1,6 +1,6 @@
 # Modelo de domínio inicial
 
-Status: conceitual; não é schema Prisma implementado. Data: 2026-11-11.
+Status: modelo evolutivo; persistência de autenticação/alunos implementada na SPRINT 02, demais entidades conceituais. Data: 2026-11-11.
 
 ## Entidades e invariantes
 
@@ -74,3 +74,9 @@ Coach possui muitos cadastros Athlete e relacionamentos; cada relacionamento per
 Persistir identidade/vínculo, convites/consentimentos, conexão e atividade quando suas sprints forem implementadas. Samples e splits podem ser tabelas ou blocos normalizados conforme volume/acesso; decidir na SPRINT 05 com consultas reais. Eventos podem pertencer ao agregado de análise; ReadState pode ser campo do MonitoringEvent enquanto houver um destinatário. Sessions, inbox/jobs e tentativas são necessidades técnicas, não tabelas obrigatórias de domínio. Métricas de dashboard são projeções calculadas inicialmente, sem tabela de contador independente. Nenhum desses modelos exige migrations na SPRINT 00.
 
 O mecanismo público de revogação deve usar capability específica, expiração, uso único, confirmação de identidade e rate limit; não reutilizar convite consumido nem fornecer IDs livres. Solicitação de fim do vínculo tem estado e auditoria próprios, sem inventar estado adicional do vínculo. Detalhes do canal e da verificação precisam de aprovação na SPRINT 03.
+
+## Persistência efetiva na SPRINT 02
+
+Coach incorpora issuer/subject; sem User separado. Athlete pertence ao coach e tem e-mail canônico único dentro dele. CoachAthleteRelationship mantém o vínculo corrente por aluno com coachId composto; somente pending é criado pela API nesta etapa. Fluxos de encerramento, nova vinculação e histórico esportivo não são antecipados. Sessão, tentativa OIDC, auditoria mínima e bucket de rate limit são persistidos por necessidade operacional. AuthAttempt não representa consentimento ou autorização Garmin.
+
+Demais entidades permanecem candidatas para sprints correspondentes. Nenhum cadastro ativa vínculo ou cria consentimento. Perfil mostra ausência de conexão como não conectada sem persistir GarminConnection fictícia.

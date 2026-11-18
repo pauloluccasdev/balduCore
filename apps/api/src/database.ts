@@ -4,7 +4,9 @@ export interface DatabaseHealth {
   ping(): Promise<void>;
   close(): Promise<void>;
 }
-export function createDatabase(url: string): DatabaseHealth {
+export function createDatabase(
+  url: string,
+): DatabaseHealth & { client: PrismaClient } {
   const adapter = new PrismaPg({
     connectionString: url,
     connectionTimeoutMillis: 2000,
@@ -13,6 +15,7 @@ export function createDatabase(url: string): DatabaseHealth {
   });
   const client = new PrismaClient({ adapter });
   return {
+    client,
     async ping() {
       await client.$queryRaw`SELECT 1`;
     },

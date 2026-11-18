@@ -21,3 +21,40 @@ test('padrões locais e URL postgres válida', () => {
   assert.equal(config.API_HOST, '127.0.0.1');
   assert.equal(config.API_PORT, 3001);
 });
+
+test('configuração OAuth incompleta e origem insegura em produção falham sem exibir segredo', () => {
+  for (const environment of [
+    {
+      DATABASE_URL: 'postgres://localhost/test',
+      GOOGLE_CLIENT_ID: 'public-id',
+      GOOGLE_CLIENT_SECRET: 'private-secret',
+    },
+    {
+      DATABASE_URL: 'postgres://localhost/test',
+      NODE_ENV: 'production',
+      APP_ORIGIN: 'http://example.test',
+    },
+  ])
+    assert.throws(
+      () => readConfig(environment),
+      (error: unknown) =>
+        error instanceof Error && !error.message.includes('private-secret'),
+    );
+});
+
+test('demo dispensa Google, mas não funciona em produção, origem remota ou bind público', () => {
+  const local = {
+    DATABASE_URL: 'postgres://localhost/test',
+    AUTH_MODE: 'demo',
+  };
+  const demo = readConfig(local);
+  assert.equal(demo.AUTH_MODE, 'demo');
+  assert.equal(Buffer.from(demo.AUTH_SECRET, 'base64').length, 32);
+  assert.equal(demo.GOOGLE_CLIENT_ID, '');
+  for (const extra of [
+    { NODE_ENV: 'production', APP_ORIGIN: 'https://127.0.0.1:3000' },
+    { APP_ORIGIN: 'https://public.example' },
+    { API_HOST: '0.0.0.0' },
+  ])
+    assert.throws(() => readConfig({ ...local, ...extra }));
+});

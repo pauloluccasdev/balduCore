@@ -1,6 +1,8 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
   poweredByHeader: false,
+  // Callbacks OAuth carregam código/state na URL; não registrar requests do dev server.
+  logging: false,
   // Regras permanentes do projeto são mantidas no AGENTS.md da raiz.
   agentRules: false,
   async rewrites() {

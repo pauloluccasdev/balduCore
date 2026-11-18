@@ -12,6 +12,7 @@ try {
     database,
     logger,
     config.NODE_ENV !== 'production',
+    { client: database.client, config },
   );
   await app.listen(config.API_PORT, config.API_HOST);
   logger.info({ port: config.API_PORT }, 'api_started');

@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
+  testMatch: ['**/foundation.spec.ts', '**/athletes.spec.ts'],
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -27,14 +28,14 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter @balducore/api start',
+      command: 'pnpm --filter @balducore/api test:e2e:server',
       url: 'http://127.0.0.1:3001/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
     {
       command: 'pnpm --filter @balducore/web start',
       url: 'http://127.0.0.1:3000',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
     },
   ],
 });

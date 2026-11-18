@@ -1,4 +1,3 @@
-// A fundação só consulta saúde do banco. Tabelas de domínio entram nas sprints autorizadas.
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -6,4 +5,90 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum RelationshipStatus {
+  pending
+  active
+  ended
+}
+
+model Coach {
+  id        String @id @default(uuid())
+  issuer    String
+  subject   String
+  name      String
+  email     String
+  enabled   Boolean @default(true)
+  createdAt DateTime @default(now())
+  sessions  CoachSession[]
+  athletes  Athlete[]
+  relationships CoachAthleteRelationship[]
+  audits AuditLog[]
+  @@unique([issuer, subject])
+}
+
+model CoachSession {
+  id        String @id @default(uuid())
+  tokenHash String @unique
+  coachId   String
+  coach     Coach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+
+model AuthAttempt {
+  stateHash String @id
+  browserHash String
+  encryptedChecks String
+  expiresAt DateTime
+  consumedAt DateTime?
+  @@index([expiresAt])
+}
+
+model Athlete {
+  id        String @id @default(uuid())
+  coachId   String
+  coach     Coach @relation(fields: [coachId], references: [id], onDelete: Restrict)
+  name      String
+  email     String
+  version   Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  relationship CoachAthleteRelationship?
+  @@unique([coachId, id])
+  @@unique([coachId, email])
+  @@index([coachId, createdAt])
+}
+
+model CoachAthleteRelationship {
+  id String @id @default(uuid())
+  coachId String
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Restrict)
+  athleteId String @unique
+  athlete Athlete @relation(fields: [coachId, athleteId], references: [coachId, id], onDelete: Restrict)
+  status RelationshipStatus @default(pending)
+  createdAt DateTime @default(now())
+  endedAt DateTime?
+  @@unique([coachId, athleteId])
+  @@index([coachId, status])
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+  coachId String
+  coach Coach @relation(fields: [coachId], references: [id], onDelete: Restrict)
+  action String
+  resourceId String
+  createdAt DateTime @default(now())
+  @@index([coachId, createdAt])
+}
+
+model RateLimitBucket {
+  key String @id
+  count Int @default(1)
+  expiresAt DateTime
+  @@index([expiresAt])
 }

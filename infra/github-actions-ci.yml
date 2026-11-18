@@ -34,10 +34,14 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: PGPASSWORD=local_dev_only psql -h 127.0.0.1 -U balducore -d postgres -c 'CREATE DATABASE balducore_test'
+      - run: pnpm db:deploy
+      - run: pnpm db:test:deploy
       - run: pnpm test:integration
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: pnpm test:e2e:demo
       - uses: actions/upload-artifact@v4
         if: always()
         with:

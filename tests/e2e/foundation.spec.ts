@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+test.beforeEach(async ({ page }) => {
+  await page.goto('/login');
+  await page.getByRole('link', { name: 'Entrar com Google' }).click();
+  await expect(page).toHaveURL('/');
+});
 test('dashboard sintético, filtro, tema persistido, navegação e ausência de overflow', async ({
   page,
 }, testInfo) => {
@@ -68,5 +73,5 @@ test('mesma origem → proxy Next → Nest → Prisma → PostgreSQL', async ({
   expect(await response.json()).toEqual({ status: 'ok', database: 'up' });
   expect(response.headers()['cache-control']).toBe('no-store');
   const absent = await request.get('/api/athletes');
-  expect(absent.status()).toBe(404);
+  expect(absent.status()).toBe(401);
 });

@@ -1,6 +1,6 @@
 # BalduCore — MVP 1 (operação inicial BalduTraining)
 
-Status: discovery aprovado; fundação da SPRINT 01 em revisão. Atualização: 2026-11-15.
+Status: discovery aprovado; SPRINT 01 mesclada; SPRINT 02 implementada em revisão. Atualização: 2026-11-15.
 
 ## Objetivo e usuários
 
@@ -92,4 +92,4 @@ Aceite ativa o vínculo, não a conexão Garmin. Sincronização é eventual; co
 
 ## Gate desta entrega
 
-SPRINT 00 aprovada. SPRINT 01 autorizada: fundação e dashboard sintético implementados para revisão, conforme roadmap. SPRINTS 02–11 aguardam autorização; não há autenticação ou API de negócio nesta entrega. Textos legais, política de retenção, política de identidade do aluno e acesso Garmin permanecem pendentes.
+SPRINTS 00 e 01 aprovadas e mescladas. SPRINT 02 autorizada e implementada para revisão: login Google/OIDC e gestão de alunos isolados por treinador, com login fictício local autorizado para os testes atuais; ativação Google real adiada. SPRINTS 03–11 não autorizadas. Textos legais, retenção esportiva, verificação do aluno no convite e acesso Garmin permanecem pendentes.
