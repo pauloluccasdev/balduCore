@@ -12,7 +12,7 @@
     "db:migrate": "node --env-file-if-exists=../../.env node_modules/prisma/build/index.js migrate dev",
     "db:deploy": "node --env-file-if-exists=../../.env node_modules/prisma/build/index.js migrate deploy",
     "test": "pnpm build && node --test dist/config.test.js dist/health.test.js dist/security.test.js",
-    "test:integration": "pnpm build && node --env-file=../../.env --test --test-concurrency=1 dist/database.integration.test.js dist/auth.integration.test.js dist/demo.integration.test.js",
+    "test:integration": "pnpm build && node --env-file=../../.env --test --test-concurrency=1 dist/database.integration.test.js dist/auth.integration.test.js dist/demo.integration.test.js dist/invitations.integration.test.js",
     "test:e2e:server": "node --env-file=../../.env dist/test-support/e2e-server.js",
     "maintenance": "pnpm build && node --env-file=../../.env dist/scripts/maintenance.js"
   },

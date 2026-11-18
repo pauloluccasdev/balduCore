@@ -91,10 +91,17 @@ export class AthletesService {
     const { version, ...data } = input(updateSchema, body);
     try {
       return await this.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "CoachAthleteRelationship" WHERE "coachId" = ${coachId} AND "athleteId" = ${id} FOR UPDATE`;
         const athlete = await tx.athlete.findUnique({
           where: { coachId_id: { coachId, id } },
         });
         if (!athlete) throw new NotFoundException('Aluno não encontrado.');
+        if (data.email !== athlete.email) {
+          await tx.invitation.updateMany({
+            where: { coachId, athleteId: id, revokedAt: null },
+            data: { revokedAt: new Date() },
+          });
+        }
         const result = await tx.athlete.updateMany({
           where: { coachId, id, version },
           data: { ...data, version: { increment: 1 } },

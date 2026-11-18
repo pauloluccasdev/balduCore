@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINT 02: login demonstrativo local para os testes atuais, sessões revogáveis e gestão de alunos persistidos. Integração Google/OIDC preparada para ativação futura. Dashboard continua demonstrativo e identificado, separado dos cadastros reais. Garmin, convites, FIT e IA real entram em sprints posteriores.
+SPRINT 03 em revisão: login demonstrativo local, gestão de alunos, convites seguros, página pública de aceites e encerramento do vínculo. Integração Google/OIDC preparada para ativação futura. Dashboard continua demonstrativo e identificado. Garmin, FIT e IA real entram em sprints posteriores.
 
 ## Execução local
 
@@ -51,6 +51,41 @@ AUTH_SECRET é opcional em demo: se vazio, a API gera chave efêmera local. Em G
 
 Para os testes atuais, a configuração e validação Google foram **adiadas por decisão do responsável técnico**. Não é necessário fazê-las para revisar a SPRINT 02 em modo demo. Não publicar esse ambiente local como sistema de acompanhamento real.
 
+## Testar convites e aceites — SPRINT 03
+
+Somente AUTH_MODE=demo, local e fora de produção. No modo Google, os endpoints de convite/jornada simulada não são registrados. Não há integração de e-mail nesta sprint.
+
+1. Entrar como Treinador Demo 1, cadastrar um aluno fictício e abrir seu perfil.
+2. Em **Convites e aceites**, gerar convite de teste. Guardar/copiar o link exibido uma vez e compartilhá-lo manualmente. Validade de 48 horas; gerar outro revoga os anteriores e suas jornadas pendentes.
+3. Abrir o link em outro navegador/janela anônima. GET/previews não consomem o convite. O fragmento é removido da barra ao carregar; **Iniciar aceite** consome o convite e cria sessão pública de 30 minutos, separada da sessão do coach.
+4. No perfil do treinador, clicar **Atualizar convites** para consultar o código simulado de seis dígitos. O código só aparece para o dono e não foi enviado por e-mail; expira em dez minutos e bloqueia após cinco erros. Código expirado exige novo convite.
+5. Na página pública, informar nome/e-mail fictícios, mantendo o destinatário do convite, e verificar o código. Divergência não associa outro aluno. Ler os dois exemplos versionados e marcar separadamente os aceites, inicialmente desmarcados.
+6. Confirmar: vínculo fica ativo e Garmin permanece **não conectada**. Recarregar o perfil/lista do coach mostra o estado persistido. O aluno não recebe conta nem dashboard.
+7. Guardar o link de encerramento exibido na confirmação (sete dias, uso único). Ele abre revisão e confirmação explícita da retirada dos aceites. Encerrar grava novas evidências e altera o vínculo para encerrado, sem apagar os aceites anteriores. Não existe reabertura nesta etapa.
+8. Se perder/expirar esse link, o coach de um vínculo ativo pode **Gerar link de encerramento** e compartilhá-lo manualmente, revogando o anterior e sua sessão. Resgate de encerramento cria sessão de 30 minutos. Abrir o link não encerra automaticamente.
+
+Em erro de rede depois de iniciar, recarregar `/convite` no mesmo navegador retoma a sessão válida. Abrir um link novo e recarregar antes do resgate perde o segredo em memória; solicitar outro convite. Nenhum segredo vai para localStorage. Alterar e-mail do cadastro revoga convites existentes. Convite revogado/expirado/usado não concede acesso; API pública não devolve nome/e-mail do destinatário ou código.
+
+Para persistir códigos entre reinícios, configurar AUTH_SECRET com 32 bytes aleatórios em base64 no `.env` ignorado. Se estiver vazio, a chave demo é efêmera; após reinício, códigos pendentes podem ficar indisponíveis e exigem reemissão. Não usar chave de exemplo nem versionar a chave. Evidências persistidas são sintéticas e não comprovam identidade real, aprovação jurídica ou conexão Garmin. Retenção/exclusão produtiva e documentos reais dependem de definição posterior.
+
+API local (prefixo `/api` no proxy Next):
+
+| Método e caminho                                      | Finalidade                                                          |
+| ----------------------------------------------------- | ------------------------------------------------------------------- |
+| GET/POST `/athletes/:id/invitations`                  | Listar/emitir, com sessão de coach e ownership; emissão exige CSRF. |
+| POST `/athletes/:id/invitations/:invitationId/revoke` | Revogar convite do próprio aluno.                                   |
+| POST `/athletes/:id/withdrawal-link`                  | Reemitir acesso de encerramento de vínculo ativo.                   |
+| POST `/public/invitation/preview`                     | Consultar disponibilidade sem consumir; token no corpo.             |
+| POST `/public/invitation/redeem`                      | Resgatar uma única vez e definir cookie de jornada.                 |
+| GET `/public/enrollment`                              | Sessão, documentos de exemplo e CSRF públicos restritos.            |
+| POST `/public/enrollment/verify`                      | Verificar e-mail esperado e código simulado.                        |
+| POST `/public/enrollment/accept`                      | Registrar aceites versionados e ativar vínculo atomicamente.        |
+| POST `/public/withdrawal/redeem`                      | Trocar link de encerramento por cookie de finalidade restrita.      |
+| GET `/public/withdrawal`                              | Consultar sessão de encerramento e CSRF.                            |
+| POST `/public/withdrawal/confirm`                     | Retirar aceites e encerrar vínculo atomicamente.                    |
+
+POST públicos exigem Origin exata; depois do resgate também exigem o CSRF da sessão pública correspondente. Cookies `balducore_enrollment` e `balducore_withdrawal` são distintos do cookie de coach, HttpOnly/SameSite=Lax e exclusivos do demo local. Tokens não aparecem nas respostas de sessão. Respostas usam no-store. Limites: 30 operações públicas/minuto/IP/origem e 120 consultas de sessão; 30 escritas de convite por coach/minuto/IP. O proxy local compartilha IP; revisar topologia antes de escala.
+
 ## Configurar login Google real — etapa futura
 
 Antes de ativar o fluxo real, definir AUTH_MODE=google. Depois:
@@ -85,7 +120,7 @@ Limites compartilhados no PostgreSQL: 15 inícios de login/minuto, 30 callbacks/
 
 ## Migrations e operação
 
-Migration inicial versionada em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria e buckets de limite. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
+Migrations versionadas em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria, buckets de limite e, na SPRINT 03, Invitation, EnrollmentSession, ConsentDocument, ConsentEvidence e WithdrawalAccess. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
 
 ```bash
 pnpm db:deploy
@@ -114,12 +149,12 @@ pnpm test:e2e
 pnpm test:e2e:demo
 ```
 
-Integração valida criptografia, assinatura JWT, issuer/audience/nonce, PKCE, callback/replay/expiração, rate limit, CSRF, dois coaches, FKs, duplicidade e concorrência. E2E inicia entrypoint exclusivo com emissor OIDC local e JWTs assinados para cadastro/lista/perfil/logout, além de proteger rotas anônimas e preservar temas/responsividade. Não reutiliza servidores existentes para evitar testes contra processos errados; portas devem estar livres. Nenhuma variável ativa o emissor OIDC de teste no main. O modo local demo usa identidades próprias e não esse emissor. O servidor E2E recusa NODE_ENV=production. Resultados/screenshots ficam em test-results e são ignorados no Git. Dados sintéticos podem permanecer apenas no banco de testes.
+Integração também valida convites, resgate/aceite/encerramento concorrentes, replay, expiração, revogação durante jornada, versões de documentos, destinatário e FKs de evidências. E2E demo cobre o fluxo público completo e convite revogado em desktop/tablet/mobile, com capturas dark/light. Integração valida criptografia, assinatura JWT, issuer/audience/nonce, PKCE, callback/replay/expiração, rate limit, CSRF, dois coaches, FKs, duplicidade e concorrência. E2E inicia entrypoint exclusivo com emissor OIDC local e JWTs assinados para cadastro/lista/perfil/logout, além de proteger rotas anônimas e preservar temas/responsividade. Não reutiliza servidores existentes para evitar testes contra processos errados; portas devem estar livres. Nenhuma variável ativa o emissor OIDC de teste no main. O modo local demo usa identidades próprias e não esse emissor. O servidor E2E recusa NODE_ENV=production. Resultados/screenshots ficam em test-results e são ignorados no Git. Dados sintéticos podem permanecer apenas no banco de testes.
 
 ## Estrutura e identidade visual
 
 - apps/web: páginas públicas/protegidas, componentes, tokens e fixtures do dashboard.
-- apps/api: Nest modular Auth/Athletes, Prisma, operação e testes.
+- apps/api: Nest modular Auth/Athletes/Invitations/Consents, Prisma, operação e testes.
 - infra: Compose, inicialização do banco de testes e modelo de CI.
 - docs: arquitetura, domínio, decisões, roadmap e oito PNGs originais.
 
@@ -131,4 +166,4 @@ Docker indisponível no WSL usado durante a entrega: testes locais usaram Postgr
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 
-Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md) e [roadmap](docs/roadmap.md). SPRINT 03 e merge somente com autorização.
+Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md) e [roadmap](docs/roadmap.md). Entrega da SPRINT 03 em revisão; merge e SPRINT 04 dependem de autorização.

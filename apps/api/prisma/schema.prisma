@@ -72,6 +72,9 @@ model CoachAthleteRelationship {
   status RelationshipStatus @default(pending)
   createdAt DateTime @default(now())
   endedAt DateTime?
+  invitations Invitation[]
+  consents ConsentEvidence[]
+  withdrawalAccesses WithdrawalAccess[]
   @@unique([coachId, athleteId])
   @@index([coachId, status])
 }
@@ -91,4 +94,92 @@ model RateLimitBucket {
   count Int @default(1)
   expiresAt DateTime
   @@index([expiresAt])
+}
+
+enum ConsentDecision {
+  accepted
+  withdrawn
+}
+
+model Invitation {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  recipientEmail String
+  tokenHash String @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  enrollment EnrollmentSession?
+  @@unique([coachId, athleteId, id])
+  @@unique([coachId, id])
+  @@index([coachId, athleteId, createdAt])
+}
+
+model EnrollmentSession {
+  id String @id @default(uuid())
+  coachId String
+  invitationId String @unique
+  athleteId String
+  invitation Invitation @relation(fields: [coachId, athleteId, invitationId], references: [coachId, athleteId, id], onDelete: Restrict)
+  tokenHash String @unique
+  expiresAt DateTime
+  codeHash String?
+  encryptedCode String?
+  codeExpiresAt DateTime
+  codeAttempts Int @default(0)
+  verifiedAt DateTime?
+  acceptedAt DateTime?
+  createdAt DateTime @default(now())
+  evidences ConsentEvidence[]
+  @@unique([coachId, athleteId, invitationId])
+  @@unique([coachId, athleteId, id])
+  @@unique([coachId, id])
+  @@index([expiresAt])
+}
+
+model ConsentDocument {
+  id String @id
+  purpose String
+  version String
+  content String
+  contentHash String
+  isSynthetic Boolean @default(true)
+  evidences ConsentEvidence[]
+  @@unique([purpose, version])
+}
+
+model ConsentEvidence {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  enrollmentId String
+  enrollment EnrollmentSession @relation(fields: [coachId, athleteId, enrollmentId], references: [coachId, athleteId, id], onDelete: Restrict)
+  documentId String
+  document ConsentDocument @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  decision ConsentDecision
+  verificationMode String @default("demo")
+  isSynthetic Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@unique([coachId, enrollmentId, documentId, decision])
+  @@index([coachId, athleteId, createdAt])
+}
+
+model WithdrawalAccess {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  tokenHash String @unique
+  sessionHash String? @unique
+  expiresAt DateTime
+  sessionExpiresAt DateTime?
+  redeemedAt DateTime?
+  consumedAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([coachId, athleteId])
 }

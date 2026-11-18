@@ -13,6 +13,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Logger } from 'pino';
 import type { DatabaseHealth } from './database.js';
 import { DATABASE, HealthController } from './health.js';
+import { InvitationsModule } from './modules/invitations/invitations.module.js';
 import { AthletesModule } from './modules/athletes/athletes.module.js';
 import type { PrismaClient } from './generated/prisma/client.js';
 import type { Config } from './config.js';
@@ -55,6 +56,11 @@ export async function createApp(
   @Module({
     imports: features
       ? [
+          InvitationsModule.register(
+            features.client,
+            features.config,
+            features.provider,
+          ),
           AthletesModule.register(
             features.client,
             features.config,
@@ -106,9 +112,9 @@ export async function createApp(
     const spec = new DocumentBuilder()
       .setTitle('BalduCore API')
       .setDescription(
-        'API do treinador: autenticação e alunos. Cookies de sessão e CSRF exigidos nas mutações.',
+        'Autenticação e alunos do treinador; convites/aceites públicos apenas no demo local. Cookies e CSRF próprios em cada jornada.',
       )
-      .setVersion('0.2.0')
+      .setVersion('0.3.0')
       .addCookieAuth(
         'balducore_session',
         { type: 'apiKey', in: 'cookie' },
