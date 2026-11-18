@@ -1,3 +1,4 @@
+import { garminLabels } from '../../../features/garmin/types';
 import Link from 'next/link';
 import { requireCoach, serverApi } from '../../../lib/server-auth';
 import { ThemeToggle } from '../../../components/theme-toggle';
@@ -108,7 +109,14 @@ export default async function Athletes({
                       <td>
                         {statusLabel[athlete.relationship?.status ?? 'pending']}
                       </td>
-                      <td>Não conectada</td>
+                      <td>
+                        {
+                          garminLabels[
+                            athlete.relationship?.garminConnection?.status ??
+                              'not_connected'
+                          ]
+                        }
+                      </td>
                       <td>
                         <Link className="button" href={`/alunos/${athlete.id}`}>
                           Abrir perfil

@@ -7,6 +7,13 @@ const schema = z.object({
     .refine((value) =>
       ['postgres:', 'postgresql:'].includes(new URL(value).protocol),
     ),
+  GARMIN_PROVIDER: z.enum(['disabled', 'mock']).default('disabled'),
+  GARMIN_TOKEN_KEY: z.string().default(''),
+  GARMIN_MOCK_SIGNING_KEY: z.string().default(''),
+  GARMIN_QUEUE_NAMESPACE: z
+    .string()
+    .regex(/^[a-z0-9-]{1,50}$/)
+    .default('balducore'),
   AUTH_MODE: z.enum(['google', 'demo']).default('google'),
   APP_ORIGIN: z.string().url().default('http://127.0.0.1:3000'),
   GOOGLE_CLIENT_ID: z.string().default(''),
@@ -74,6 +81,20 @@ export function readConfig(environment: NodeJS.ProcessEnv): Config {
     throw new Error(
       'Configuração inválida: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_SECRET',
     );
+  }
+  if (config.GARMIN_PROVIDER === 'mock') {
+    if (config.AUTH_MODE !== 'demo' || config.NODE_ENV === 'production')
+      throw new Error('Garmin mock exige modo demo local fora de produção.');
+    for (const key of [
+      'GARMIN_TOKEN_KEY',
+      'GARMIN_MOCK_SIGNING_KEY',
+    ] as const) {
+      if (
+        !/^[A-Za-z0-9+/]{43}=$/.test(config[key]) ||
+        Buffer.from(config[key], 'base64').length !== 32
+      )
+        throw new Error(`Configuração inválida: ${key}`);
+    }
   }
   return config;
 }

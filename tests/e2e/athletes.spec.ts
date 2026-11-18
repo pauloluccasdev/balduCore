@@ -26,7 +26,9 @@ test('Google OIDC de teste → cadastro → busca → edição → logout', asyn
     .click();
   await expect(page).toHaveURL(/\/alunos\/[^/?]+$/);
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
-  await expect(page.getByText('Não conectada', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('definition').filter({ hasText: /^Não conectada$/ }),
+  ).toBeVisible();
   await expect(
     page.getByText('Pendente', { exact: true }).first(),
   ).toBeVisible();

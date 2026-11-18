@@ -1,10 +1,12 @@
 'use client';
+import { PublicGarmin } from '../garmin/public-garmin';
 import { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from '../../components/theme-toggle';
 import { ShareLink } from './invitation-panel';
 
 type Session = {
   csrf: string;
+  purpose?: string;
   coachName: string;
   verified?: boolean;
   accepted?: boolean;
@@ -56,6 +58,13 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
   const [withdrawalUrl, setWithdrawalUrl] = useState('');
   const withdrawal = kind === 'withdrawal';
   const sessionPath = withdrawal ? 'withdrawal' : 'enrollment';
+  useEffect(() => {
+    const restart = () => {
+      if (window.location.hash) window.location.reload();
+    };
+    window.addEventListener('hashchange', restart);
+    return () => window.removeEventListener('hashchange', restart);
+  }, []);
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
@@ -110,7 +119,8 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
           <strong>Experiência demonstrativa</strong>
           <p className="small">
             Use somente nome e e-mail fictícios. A verificação é simulada e os
-            textos são exemplos para teste. Nenhuma conta Garmin será conectada.
+            textos são exemplos para teste. Nenhuma conta Garmin real será
+            conectada.
           </p>
         </div>
         <div>
@@ -121,7 +131,9 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
             {done
               ? withdrawal
                 ? 'Vínculo encerrado.'
-                : 'Acompanhamento aceito.'
+                : session?.purpose === 'garmin'
+                  ? 'Identificação de teste confirmada.'
+                  : 'Acompanhamento aceito.'
               : withdrawal
                 ? 'Encerrar acompanhamento'
                 : 'Seu próximo passo no esporte.'}
@@ -186,7 +198,11 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
                     { email, code },
                     session.csrf,
                   );
-                  setSession({ ...session, verified: true });
+                  setSession({
+                    ...session,
+                    verified: true,
+                    ...(session.purpose === 'garmin' ? { accepted: true } : {}),
+                  });
                 } else {
                   const result = await publicApi(
                     'enrollment/accept',
@@ -301,7 +317,9 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
             <p>
               A confirmação retira os aceites demonstrativos e encerra o vínculo
               com este treinador. As evidências anteriores permanecem no
-              histórico de teste. Esta ação não representa revogação Garmin.
+              histórico de teste. A conexão de teste será bloqueada
+              imediatamente; sua revogação será processada em segundo plano.
+              Nenhuma conta Garmin real será acessada.
             </p>
             <label className="consent-check">
               <input type="checkbox" required />
@@ -317,12 +335,19 @@ export function PublicJourney({ kind }: { kind: 'invitation' | 'withdrawal' }) {
             <p>
               {withdrawal
                 ? 'A retirada dos aceites foi registrada. O vínculo demonstrativo está encerrado.'
-                : 'Os aceites de teste foram registrados e o treinador poderá consultar o vínculo ativo.'}
+                : session?.purpose === 'garmin'
+                  ? 'Identificação demonstrativa confirmada. Os aceites anteriores permanecem válidos.'
+                  : 'Os aceites de teste foram registrados e o treinador poderá consultar o vínculo ativo.'}
             </p>
-            <p>
-              <strong>Garmin não conectada.</strong> A autorização oficial será
-              disponibilizada em uma próxima etapa.
-            </p>
+            {withdrawal ? (
+              <p>
+                A conexão simulada foi bloqueada. A revogação de teste pode
+                continuar em processamento. Nenhuma conta Garmin real foi
+                acessada.
+              </p>
+            ) : (
+              <PublicGarmin />
+            )}
           </div>
         )}
         {withdrawalUrl && (

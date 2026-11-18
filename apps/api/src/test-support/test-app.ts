@@ -1,3 +1,4 @@
+import { createGarminRuntime } from '../modules/garmin-connections/runtime.js';
 import { randomBytes } from 'node:crypto';
 import { pino } from 'pino';
 import { createApp } from '../app.js';
@@ -9,6 +10,7 @@ export async function createTestApp(
   port = 0,
   origin?: string,
   mode: 'google' | 'demo' = 'google',
+  worker = false,
 ) {
   let isolated = false;
   try {
@@ -30,6 +32,10 @@ export async function createTestApp(
     DATABASE_URL: process.env.TEST_DATABASE_URL,
     NODE_ENV: 'test',
     AUTH_MODE: mode,
+    GARMIN_PROVIDER: mode === 'demo' ? 'mock' : 'disabled',
+    GARMIN_TOKEN_KEY: randomBytes(32).toString('base64'),
+    GARMIN_MOCK_SIGNING_KEY: randomBytes(32).toString('base64'),
+    GARMIN_QUEUE_NAMESPACE: `test-${randomBytes(8).toString('hex')}`,
     APP_ORIGIN:
       origin ?? `http://127.0.0.1:${Math.floor(Math.random() * 20000) + 20000}`,
     GOOGLE_CLIENT_ID: 'test-client',
@@ -41,16 +47,24 @@ export async function createTestApp(
   const database = createDatabase(config.DATABASE_URL);
   const fixture = await oidcFixture();
   const provider = new GoogleProvider(config, fixture.configuration);
+  const garmin = await createGarminRuntime(
+    database.client,
+    config,
+    pino({ level: 'silent' }),
+  );
   const app = await createApp(database, pino({ level: 'silent' }), false, {
     client: database.client,
     config,
     provider,
+    garmin,
   });
+  if (worker) await garmin.worker?.start();
   await app.listen(port, '127.0.0.1');
   return {
     app,
     database,
     config,
+    garmin,
     fixture,
     base: await app.getUrl(),
     async close() {

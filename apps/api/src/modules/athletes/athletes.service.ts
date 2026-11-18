@@ -54,7 +54,13 @@ export class AthletesService {
       this.db.athlete.count({ where }),
       this.db.athlete.findMany({
         where,
-        include: { relationship: true },
+        include: {
+          relationship: {
+            include: {
+              garminConnection: { select: { status: true, isSynthetic: true } },
+            },
+          },
+        },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
@@ -65,7 +71,13 @@ export class AthletesService {
   async get(coachId: string, id: string) {
     const athlete = await this.db.athlete.findUnique({
       where: { coachId_id: { coachId, id } },
-      include: { relationship: true },
+      include: {
+        relationship: {
+          include: {
+            garminConnection: { select: { status: true, isSynthetic: true } },
+          },
+        },
+      },
     });
     if (!athlete) throw new NotFoundException('Aluno não encontrado.');
     return athlete;
@@ -76,7 +88,15 @@ export class AthletesService {
       return await this.db.$transaction(async (tx) => {
         const athlete = await tx.athlete.create({
           data: { ...data, coachId, relationship: { create: {} } },
-          include: { relationship: true },
+          include: {
+            relationship: {
+              include: {
+                garminConnection: {
+                  select: { status: true, isSynthetic: true },
+                },
+              },
+            },
+          },
         });
         await tx.auditLog.create({
           data: { coachId, action: 'athlete.created', resourceId: athlete.id },
@@ -115,7 +135,15 @@ export class AthletesService {
         });
         return tx.athlete.findUniqueOrThrow({
           where: { coachId_id: { coachId, id } },
-          include: { relationship: true },
+          include: {
+            relationship: {
+              include: {
+                garminConnection: {
+                  select: { status: true, isSynthetic: true },
+                },
+              },
+            },
+          },
         });
       });
     } catch (error) {

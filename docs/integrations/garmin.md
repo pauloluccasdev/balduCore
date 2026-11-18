@@ -1,6 +1,6 @@
 # Integração Garmin
 
-Status: desenho técnico; nenhum endpoint, payload ou escopo Garmin foi implementado ou presumido. Data de consulta: 2026-11-11.
+Status: infraestrutura/mock da SPRINT 04 implementados em revisão; provider oficial bloqueado por dependência externa. Nenhum endpoint, payload ou escopo Garmin foi presumido. Consulta pública atualizada: 2026-11-18. As seções de fluxo oficial abaixo continuam desenho condicionado ao acesso autorizado.
 
 ## Evidência pública e dependências
 
@@ -10,7 +10,7 @@ A implementação comercial depende de acesso Business adequado, credenciais, do
 
 ## Contrato interno — não representa API Garmin
 
-Porta ActivityProvider com operações conceituais: iniciar autorização, concluir autorização, validar/normalizar entrega, recuperar dados apenas quando permitido, revogar e consultar estado local. Implementações GarminOfficialProvider e GarminMockProvider. DTOs internos descrevem identidade de origem, revisão, timestamp, unidades, disponibilidade e evidência de proveniência; o domínio não importa DTO Garmin.
+Porta ActivityProvider com operações conceituais: iniciar autorização, concluir autorização, validar/normalizar entrega, recuperar dados apenas quando permitido, revogar e consultar estado local. Implementação atual GarminMockProvider; adapter oficial futuro condicionado ao contrato autorizado, ainda ausente. DTOs internos descrevem identidade de origem, revisão, timestamp, unidades, disponibilidade e evidência de proveniência; o domínio não importa DTO Garmin.
 
 Mock usa identificadores próprios, relógio controlável e dados isSynthetic=true/source=garmin_mock. Simula sucesso, recusa, expiração, duplicata, atualização, atraso, entrega fora de ordem, payload inválido, indisponibilidade e revogação. Não acessa contas reais. Inicialização de produção falha se provider mock estiver habilitado; seeds nunca criam conexão oficial.
 
@@ -86,3 +86,19 @@ MVP 2: treino estruturado (aquecimento, esforço/repetições, recuperação, de
 ## Fronteira implementada na SPRINT 03
 
 A jornada de convite e os aceites demonstrativos foram implementados sem provider Garmin, credenciais, tentativa OAuth ou conexão. Confirmação e perfil mantêm Garmin não conectada; não existe botão que simule autorização oficial concluída. Encerramento público retira aceites de teste e encerra apenas o vínculo local. Integrar revogação de conexão e bloqueio de jobs requer a SPRINT 04 autorizada e os contratos oficiais quando disponíveis.
+
+## Implementação demonstrativa da SPRINT 04
+
+Ver [ADR-004](../decisions/adr-004-garmin-processing.md). GARMIN_PROVIDER=disabled por padrão; mock exige AUTH_MODE=demo, origem/bind locais, fora de produção, chave de criptografia e chave de assinatura válidas e estáveis. pnpm garmin:setup gera chaves no .env ignorado, sem exibi-las. Nenhuma senha Garmin, credential ou segredo de assinatura chega ao frontend.
+
+Aluno com aceites inicia tentativa de dez minutos, state aleatório de uso único e hash do navegador/enrollment; tela /garmin/mock explicitamente BalduCore permite aprovar/recusar, sem redirecionar a domínio Garmin ou autenticar conta real. Credenciais sintéticas do adapter são cifradas com chave externa ao banco. Falha de autorização é registrada; callback revalida vínculo/geração e compensa autorização cancelada. Renovação tem lease de dez segundos e versão, evitando sobrescrita concorrente ou restauração depois de disconnect. Ao expirar a sessão inicial, coach pode emitir convite de finalidade conexão, com nova verificação e aceites anteriores preservados.
+
+Contrato de entrega **exclusivamente mock**: POST /integrations/garmin-mock/events, X-Baldu-Mock-Timestamp (segundos UTC) e X-Baldu-Mock-Signature (HMAC SHA-256 hexadecimal de timestamp + ponto + bytes do corpo bruto). Janela de cinco minutos, limite JSON 16 KiB, DTO estrito de entrega e normalização. Isso não descreve autenticação Garmin real. Conta é resolvida pelo hash de conexão conhecida; evento não pode escolher coachId/athleteId. Assinatura inválida é rejeitada, conta desconhecida/inativa não cria aluno nem atividade. ACK 202 representa recebimento durável, não processamento concluído.
+
+Inbox e job pg-boss são atômicos via fromPrisma. Identidade de entrega e hash evitam duplicação/colisão; mesmo externo usa revisão monotônica, eventos antigos são ignorados e conteúdo conflitante na mesma revisão falha. Worker separado trata envelope mínimo sintético com null em métricas ausentes. pg-boss: prazo de execução de 30 segundos, quatro retries (cinco tentativas), atraso inicial de um segundo e backoff. Erros permanentes/exauridos ficam failed na inbox para revisão manual; redrive valida dono/estado do recurso. Payloads cifrados não são colocados no job, que carrega apenas referência.
+
+Publicação revalida vínculo ativo/aceites, conexão/geração e fencing da execução. Disconnect/retirada impedem imediatamente recebimento e publicação, limpam credenciais ativas e persistem revogação. Falha externa mantém pendência com coleta bloqueada; sucesso limpa o snapshot cifrado. Revogação assinada pelo provider mock bloqueia localmente sem reativação por entregas antigas. Cancelar conexão não encerra vínculo; retirar acompanhamento encerra vínculo e desconecta.
+
+Ferramentas locais no perfil simulam atividade, duplicata, atualização, versão antiga, falhas temporárias/permanentes, payload inválido, expiração/refresh rejeitado, revogação e indisponibilidade de revogação. Não há sincronização automática com uma conta real. Perfil/lista/Configurações distinguem mock, status, pendências e disponibilidade do processamento. API não fornece histórico esportivo completo até a SPRINT 05.
+
+Bloqueio oficial verificado na inspeção: nenhum acesso/credencial ou documentação autorizada fornecidos. A página pública oficial confirma opções Business, mas não substitui aprovação da aplicação. Antes de habilitar produção, confirmar contratos listados no checklist, políticas jurídicas/retenção e deploy/migração/rotação de chaves. Não promover o mock a provider oficial por configuração.

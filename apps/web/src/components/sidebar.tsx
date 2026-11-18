@@ -91,15 +91,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         </ul>
       </nav>
       <div className="sidebar-footer">
-        <div
-          className="nav-item future"
-          aria-disabled="true"
-          title="Configurações em desenvolvimento"
+        <Link
+          className={`nav-item ${pathname.startsWith('/configuracoes') ? 'active' : ''}`}
+          href="/configuracoes"
+          onClick={onNavigate}
+          aria-current={
+            pathname.startsWith('/configuracoes') ? 'page' : undefined
+          }
         >
           <Settings size={19} aria-hidden="true" />
           <span>Configurações</span>
-          <small>Em breve</small>
-        </div>
+        </Link>
         <p>
           BalduCore <span>•</span> Área do treinador
         </p>

@@ -3,7 +3,13 @@ export interface Athlete {
   name: string;
   email: string;
   version: number;
-  relationship: { status: 'pending' | 'active' | 'ended' } | null;
+  relationship: {
+    status: 'pending' | 'active' | 'ended';
+    garminConnection?: {
+      status: import('../garmin/types').GarminStatus;
+      isSynthetic: boolean;
+    } | null;
+  } | null;
 }
 export const statusLabel = {
   pending: 'Pendente',

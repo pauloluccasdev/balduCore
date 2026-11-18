@@ -4,19 +4,23 @@ import { readConfig } from './config.js';
 import { createDatabase } from './database.js';
 
 const logger = pino({ level: 'info' });
+let cleanup: (() => Promise<void>) | undefined;
 try {
   const config = readConfig(process.env);
   logger.level = config.LOG_LEVEL;
   const database = createDatabase(config.DATABASE_URL);
+  cleanup = () => database.close();
   const app = await createApp(
     database,
     logger,
     config.NODE_ENV !== 'production',
     { client: database.client, config },
   );
+  cleanup = () => app.close();
   await app.listen(config.API_PORT, config.API_HOST);
   logger.info({ port: config.API_PORT }, 'api_started');
 } catch {
+  await cleanup?.().catch(() => {});
   logger.fatal(
     { code: 'API_START_FAILED' },
     'Verifique configuração e documentação local.',
