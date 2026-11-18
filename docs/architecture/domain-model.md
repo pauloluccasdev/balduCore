@@ -80,3 +80,11 @@ O mecanismo público de revogação deve usar capability específica, expiraçã
 Coach incorpora issuer/subject; sem User separado. Athlete pertence ao coach e tem e-mail canônico único dentro dele. CoachAthleteRelationship mantém o vínculo corrente por aluno com coachId composto; somente pending é criado pela API nesta etapa. Fluxos de encerramento, nova vinculação e histórico esportivo não são antecipados. Sessão, tentativa OIDC, auditoria mínima e bucket de rate limit são persistidos por necessidade operacional. AuthAttempt não representa consentimento ou autorização Garmin.
 
 Demais entidades permanecem candidatas para sprints correspondentes. Nenhum cadastro ativa vínculo ou cria consentimento. Perfil mostra ausência de conexão como não conectada sem persistir GarminConnection fictícia.
+
+## Persistência efetiva na SPRINT 03
+
+Invitation pertence ao relacionamento coach/aluno e fixa recipientEmail; hash único, datas de expiração/resgate/revogação. EnrollmentSession tem relação 1:1 com o convite, hash de cookie independente, expiração, código simulado protegido, tentativas e evidências de verificação/aceite. ConsentDocument mantém conteúdo/versionamento/hash dos dois exemplos; ConsentEvidence registra aceites e retiradas append-only, com unicidade por coach/enrollment/documento/decisão e FKs compostas que impedem associar outro treinador ou outro aluno. Nenhuma tabela Garmin foi criada.
+
+WithdrawalAccess pertence ao mesmo relacionamento e mantém hash do link separado do hash da sessão pública de encerramento. Validades: sete dias no link, 30 minutos na sessão; reemissão revoga link e sessão anteriores. Encerramento mantém evidências e não permite reabrir o vínculo. Sessão de convite nunca é sessão de coach ou mecanismo permanente de gestão.
+
+Locks no relacionamento ordenam mutações de convite, jornada, destinatário e encerramento; consentimentos e transição do vínculo são atômicos. Repetir confirmação não duplica evidência. E-mail alterado pelo coach revoga convites pendentes/usados, sem trocar aluno silenciosamente. Convite revogado depois de aceite não desfaz vínculo ativo: retirada tem fluxo próprio. Não há merge de identidades entre coaches. Verificação persistida é explicitamente demo, sem afirmar controle real da caixa postal.

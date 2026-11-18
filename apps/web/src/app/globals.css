@@ -967,3 +967,138 @@ tbody tr:last-child td {
     margin: 14px 16px 0;
   }
 }
+
+/* Jornada pública deriva das superfícies e tokens existentes, sem sidebar de coach. */
+.public-card {
+  max-width: 640px;
+  width: min(100%, 640px);
+}
+.public-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.public-card h1 {
+  font-size: clamp(26px, 5vw, 34px);
+  line-height: 1.15;
+}
+.public-card p,
+.public-card label,
+.invitation-panel p {
+  overflow-wrap: anywhere;
+}
+.public-card p {
+  line-height: 1.6;
+}
+.public-card .eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.invitation-panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.invitation-panel .card-heading {
+  flex-wrap: wrap;
+}
+.invitation-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.invitation-list li {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.invitation-list li > * + * {
+  margin-top: 10px;
+}
+.demo-code {
+  padding: 12px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+}
+.demo-code p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.demo-code span {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.15em;
+}
+.share-link {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.share-link label {
+  font-weight: 700;
+  font-size: 13px;
+}
+.share-link textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font: inherit;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.consent-document {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.consent-document summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.consent-document p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+.athlete-form .consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.athlete-form .consent-check input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+.journey-confirmation {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+@media (max-width: 767px) {
+  .public-page {
+    padding: 20px 12px;
+    align-items: start;
+  }
+  .public-card {
+    padding: 22px 18px;
+    gap: 18px;
+  }
+}

@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 import base from './playwright.config';
 export default defineConfig({
   ...base,
-  testMatch: '**/demo.spec.ts',
+  testMatch: ['**/demo.spec.ts', '**/invitations.spec.ts'],
   webServer: [
     {
       command: 'pnpm --filter @balducore/api test:e2e:server',

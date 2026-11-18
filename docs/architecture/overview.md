@@ -133,3 +133,9 @@ Persistência inicial definida pela necessidade: Coach, CoachSession, AuthAttemp
 ## Modo demonstrativo local autorizado em 2026-11-18
 
 AUTH_MODE=demo registra entrada local com identidades fixas e issuer próprio. Reutiliza AuthService para emitir sessões e controlar acesso, sem criar fluxo Google fictício no ambiente normal. Configuração produtiva ou origem/bind públicos são rejeitados; sessões só são aceitas no modo correspondente ao issuer. Web identifica demonstração na entrada e em todas as páginas protegidas; API marca sessão/alunos sintéticos. Google/OIDC permanece preparado e sua ativação foi adiada para etapa futura.
+
+## Evolução na SPRINT 03
+
+InvitationsModule expõe emissão/revogação ao coach dono e uma jornada pública independente. ConsentsService mantém documentos demonstrativos imutáveis e evidências de aceite/retirada. InvitationsService coordena transações de vínculo e consentimentos, usando lock do relacionamento compartilhado com edição do cadastro. Não há provider de e-mail, fila ou integração Garmin antecipados. Controllers demo ausentes no modo Google/produção; restrição local é validada no startup.
+
+Next renderiza `/convite` e `/encerrar` sem layout protegido/sidebar, usando o design system existente, dark/light e estados de confirmação/erro. Links carregam segredo no fragmento, removido no browser antes de resgate explícito. Cookies públicos HttpOnly e CSRF por capability não concedem principal de treinador. Página do perfil obtém cadastro/convites em paralelo via API autenticada, sem Prisma no frontend. Ver [ADR-003](../decisions/adr-003-invitations-consents.md) e README para limites demonstrativos e recuperação.

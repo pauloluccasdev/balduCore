@@ -82,3 +82,7 @@ Na SPRINT 03, projetar mecanismo público seguro de retirada de autorização e 
 SPRINT 05 admite importação manual de FIT para desenvolvimento, separada de sincronização oficial. Validar formato com parser mantido, tamanho máximo, quantidade de amostras, tempo/memória de processamento e checksum; tratar arquivo como não confiável, não usar nome enviado como caminho e não persistir GPS sem necessidade. Fonte `manual_fit` indica upload, não prova de origem/autenticidade Garmin ou veracidade das medições. Idempotência por tenant/arquivo e identificação de possíveis duplicatas com sincronização precisam de regra explícita, sem descartar silenciosamente atividades por similaridade.
 
 MVP 2: treino estruturado (aquecimento, esforço/repetições, recuperação, desaquecimento, metas, duração/distância) e status de publicação para aluno poderão usar adapter de envio separado se a Training API oficial permitir. Não criar schema, endpoints ou provider de envio no MVP 1. Não prometer histórico ou sincronização instantânea.
+
+## Fronteira implementada na SPRINT 03
+
+A jornada de convite e os aceites demonstrativos foram implementados sem provider Garmin, credenciais, tentativa OAuth ou conexão. Confirmação e perfil mantêm Garmin não conectada; não existe botão que simule autorização oficial concluída. Encerramento público retira aceites de teste e encerra apenas o vínculo local. Integrar revogação de conexão e bloqueio de jobs requer a SPRINT 04 autorizada e os contratos oficiais quando disponíveis.

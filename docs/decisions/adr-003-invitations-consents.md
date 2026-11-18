@@ -1,6 +1,6 @@
 # ADR-003 — Convites, identidade e consentimentos na SPRINT 03
 
-Status: proposta para revisão do responsável técnico. SPRINT 03 autorizada para planejamento; decisões de verificação de identidade e aceites abaixo aguardam aprovação. Data: 2026-11-18.
+Status: decisões aprovadas pelo responsável técnico em 2026-11-18, após apresentação do plano e confirmação “pode seguir”. Implementação da SPRINT 03 validada e em revisão; aceite final da entrega e merge ainda dependem de revisão.
 
 ## Estado e dependência
 
@@ -28,7 +28,7 @@ A jornada deve declarar verificationMode=demo/isSynthetic e não registrar uma v
 
 - Coach gera convite a partir de aluno preexistente do seu cadastro, com vínculo pendente e e-mail destinatário fixado.
 - Token de pelo menos 32 bytes aleatórios; armazenar somente hash, com validade proposta de 48 horas, revogação e consumo único. Link exibido uma vez e compartilhado manualmente pelo usuário.
-- GET valida estado sem consumir; não incluir dados pessoais do destinatário em previews públicos.
+- GET da página não consome o convite. A consulta de disponibilidade usa POST com token no corpo, sem consumir; não incluir dados pessoais do destinatário em previews públicos. O link usa fragmento, que não chega ao servidor na navegação.
 - POST de resgate consome convite atomicamente e cria capability de jornada restrita e temporária (proposta: 30 minutos). Não é uma sessão de coach. Reuso concorrente produz um único vencedor.
 - Após resgate, remover segredo da URL e usar cookie HttpOnly com controles de origem/CSRF, sem analytics, cache público ou logs de query/tokens.
 - Nome/e-mail, aceites e verificação são associados ao aluno fixado pelo convite. Divergência de e-mail não reatribui athleteId: exigir reemissão pelo coach.
@@ -47,9 +47,9 @@ Registrar evidências mínimas, horário, documento/versão e origem demo. Não 
 
 Preparar mecanismo com capability de finalidade específica, separada do convite consumido e da sessão de coach, expiração e proteção contra reutilização. Não aceitar athleteId/coachId arbitrários na requisição pública. Retirada de aceite precisa de trilha e efeito operacional definido; nunca sobrescrever a evidência anterior.
 
-Proposta para o teste demo: aluno pode retirar os aceites de acompanhamento e solicitar encerramento por link restrito, registrando a ação e encerrando o vínculo. Reabertura ou novo vínculo exigem outro fluxo aprovado, sem ativação manual escondida. Detalhes e recuperação do acesso público devem ser fechados antes de implementar essa parte. Não representar esse mecanismo como revogação Garmin, pois nenhuma conexão existe nesta sprint.
+Proposta para o teste demo: aluno pode retirar os aceites de acompanhamento e solicitar encerramento por link restrito, registrando a ação e encerrando o vínculo. Reabertura ou novo vínculo exigem outro fluxo aprovado, sem ativação manual escondida. O link de encerramento é exibido uma vez na confirmação, expira em sete dias e é resgatado explicitamente para uma sessão pública de 30 minutos. O treinador pode reemitir o link para compartilhamento manual, revogando o anterior e sua sessão. Não há recuperação por e-mail nesta etapa. Não representar esse mecanismo como revogação Garmin, pois nenhuma conexão existe nesta sprint.
 
-## Plano após aprovação
+## Plano aprovado
 
 1. Definir migrations e constraints mínimas de Invitation, jornada, verificação e documentos/evidências de consentimento; preservar isolamento composto por coachId.
 2. Implementar emissão/revogação/listagem de convites para o dono do aluno, sem acesso cruzado e com auditoria.
@@ -64,6 +64,18 @@ Proposta para o teste demo: aluno pode retirar os aceites de acompanhamento e so
 
 Treinador demo gera e revoga convite do próprio aluno. Aluno completa jornada demonstrativa válida e somente seu vínculo é ativado, com evidências sintéticas rastreáveis. Convite inválido não expõe dados nem permite aceite. A página pública não concede sessão de coach. Nenhum sucesso de convite representa conexão Garmin.
 
-## Decisões solicitadas
+## Decisões aprovadas e limites
 
-Aprovar código de identidade simulado somente no modo demo, sem serviço de e-mail real; textos de aceite explicitamente demonstrativos; parâmetros propostos e retirada de aceites com encerramento do vínculo. Não confundir essa aprovação com aprovação jurídica ou ativação produtiva.
+Código de identidade simulado somente no modo demo, sem serviço de e-mail real; textos de aceite explicitamente demonstrativos; convite de 48 horas, jornada de 30 minutos, código de dez minutos/cinco tentativas e retirada de aceites com encerramento do vínculo. Esta aprovação não é aprovação jurídica ou ativação produtiva.
+
+## Consolidação da implementação
+
+InvitationsModule registra os controllers apenas em AUTH_MODE=demo fora de produção. Configuração local de demo também exige origem/bind de loopback. ConsentsService cuida dos documentos e evidências; InvitationsService coordena a transação com o vínculo. Não há fila, provider Garmin ou serviço de e-mail nesta sprint.
+
+Invitation e EnrollmentSession usam hashes de capabilities distintas; a segunda tem código HMAC e cópia cifrada com AES-GCM, legível somente pelo coach dono, dentro do prazo e antes da verificação. O segredo de convite é retornado uma vez no fragmento do link. O browser remove o fragmento ao carregar a página, antes da ação explícita de resgate; assim ele não chega a SSR ou logs HTTP. Abrir/previsualizar não consome o convite. Cookie público HttpOnly/SameSite=Lax, CSRF vinculado ao token e Origin exata; nenhum token no localStorage. Os endpoints de simulação não existem em modo Google.
+
+Locks no relacionamento serializam emissão, resgate, revogação, aceite, edição do destinatário e encerramento. Edição do e-mail revoga convites existentes; aceite e encerramento são transacionais e idempotentes. Um resgate concorrente vence. Revogar convite após aceite não retira consentimentos retroativamente: o encerramento tem fluxo próprio. Convite utilizado e vínculo ativo continuam estados separados.
+
+ConsentDocument guarda conteúdo/versão/hash dos exemplos imutáveis; divergência do conteúdo persistido falha fechada. ConsentEvidence registra aceites e retiradas append-only, com vínculo ao mesmo coach/aluno/enrollment via FKs compostas. Não há endpoint de edição de evidências. WithdrawalAccess possui segredo e sessão separados, uso único no resgate, finalidade de encerramento, expiração/revogação e confirmação explícita; replay da confirmação não duplica efeitos. O encerramento não reabre vínculo, não apaga evidências e não representa desconexão Garmin.
+
+AUTH_SECRET vazio gera chave efêmera no demo. Reinício pode tornar códigos pendentes ilegíveis: o perfil mostra indisponibilidade e permite outro convite; não expõe erro criptográfico. Para continuidade entre reinícios, usar chave local estável válida. TTLs são constantes explícitas nesta sprint, sem tela/configuração adicional. Recuperação por e-mail, verificação real, políticas jurídicas e retenção produtiva ficam pendentes antes de dados reais.
