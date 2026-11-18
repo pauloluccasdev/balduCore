@@ -20,6 +20,7 @@ export const requireCoach = cache(async () => {
   if (response.status === 401) redirect('/login');
   if (!response.ok) throw new Error('Não foi possível verificar sua sessão.');
   return (await response.json()) as {
+    mode: 'google' | 'demo';
     coach: { id: string; name: string; email: string };
   };
 });

@@ -92,4 +92,4 @@ Aceite ativa o vínculo, não a conexão Garmin. Sincronização é eventual; co
 
 ## Gate desta entrega
 
-SPRINTS 00 e 01 aprovadas e mescladas. SPRINT 02 autorizada e implementada para revisão: login Google/OIDC e gestão de alunos isolados por treinador, com smoke Google real pendente de configuração do cliente e conta autorizada. SPRINTS 03–11 não autorizadas. Textos legais, retenção esportiva, verificação do aluno no convite e acesso Garmin permanecem pendentes.
+SPRINTS 00 e 01 aprovadas e mescladas. SPRINT 02 autorizada e implementada para revisão: login Google/OIDC e gestão de alunos isolados por treinador, com login fictício local autorizado para os testes atuais; ativação Google real adiada. SPRINTS 03–11 não autorizadas. Textos legais, retenção esportiva, verificação do aluno no convite e acesso Garmin permanecem pendentes.

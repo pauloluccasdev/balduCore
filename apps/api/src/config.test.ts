@@ -41,3 +41,20 @@ test('configuração OAuth incompleta e origem insegura em produção falham sem
         error instanceof Error && !error.message.includes('private-secret'),
     );
 });
+
+test('demo dispensa Google, mas não funciona em produção, origem remota ou bind público', () => {
+  const local = {
+    DATABASE_URL: 'postgres://localhost/test',
+    AUTH_MODE: 'demo',
+  };
+  const demo = readConfig(local);
+  assert.equal(demo.AUTH_MODE, 'demo');
+  assert.equal(Buffer.from(demo.AUTH_SECRET, 'base64').length, 32);
+  assert.equal(demo.GOOGLE_CLIENT_ID, '');
+  for (const extra of [
+    { NODE_ENV: 'production', APP_ORIGIN: 'https://127.0.0.1:3000' },
+    { APP_ORIGIN: 'https://public.example' },
+    { API_HOST: '0.0.0.0' },
+  ])
+    assert.throws(() => readConfig({ ...local, ...extra }));
+});

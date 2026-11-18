@@ -1,6 +1,6 @@
 # BalduCore — roadmap técnico
 
-Status: SPRINTS 00 e 01 aprovadas e mescladas; SPRINT 02 aprovada, implementada e em revisão; smoke com Google real pendente de configuração. SPRINTS 03–11 não autorizadas. Atualização: 2026-11-15. Este roadmap substitui a numeração de etapas do discovery inicial.
+Status: SPRINTS 00 e 01 aprovadas e mescladas; SPRINT 02 aprovada, implementada e em revisão; testes atuais com login fictício local; ativação Google adiada por decisão do responsável técnico. SPRINTS 03–11 não autorizadas. Atualização: 2026-11-15. Este roadmap substitui a numeração de etapas do discovery inicial.
 
 Uma branch por sprint (`sprint/NN-descricao`), PR para main e nenhuma passagem automática à próxima sprint. Apresentar problema, plano, decisões/trade-offs e aceite antes de implementar. Encerrar com revisão, testes/resultados, limitações e documentação atualizada; merge requer autorização. O PR da SPRINT 00 não equivale a aprovação arquitetural.
 
@@ -79,3 +79,11 @@ Validação: builds, tipos, lint, formatação, 6 testes unitários/HTTP/criptog
 Arquivos: apps/api/src/modules/auth, apps/api/src/modules/athletes, apps/api/prisma/migrations, apps/web/src/app/(coach), apps/web/src/app/login, apps/web/src/features/athletes e tests/e2e/athletes.spec.ts. README/ADR-002 documentam configuração e operação. O dashboard permanece sintético, protegido e separado dos alunos persistidos.
 
 Pendências: configurar cliente OAuth real e primeiro treinador autorizado, executar smoke Google e revisar entrega; Docker/WSL e ativação do workflow GitHub continuam bloqueios ambientais herdados. Limites de login compartilham IP do proxy local; revisar topologia antes de escala. Fonte/logo provisórios. Não há convites, consentimentos, Garmin, FIT ou IA reais; SPRINT 03 não autorizada.
+
+## Ajuste da SPRINT 02 — 2026-11-18
+
+Login fictício solicitado para testar agora, sem entrada real no Google. AUTH_MODE=demo, duas contas fixas, banner de dados sintéticos, sessão real e isolamento por treinador; modo bloqueado em produção e fora de loopback. Emissor OIDC de teste continua exclusivo da suíte. Contas demo não se confundem com identidades Google e seus dados não são tratados como reais.
+
+Configuração Google e smoke com conta real são adiados, deixando de bloquear a revisão demonstrativa da SPRINT 02. Nenhum aceite de uso produtivo é presumido. README/.env.example explicam a entrada com Demo 1 e Demo 2. PR #3 concentra esse ajuste; SPRINT 03 segue não autorizada.
+
+Validação do ajuste demo: build e tipos das duas aplicações, lint e formatação; 7 testes unitários/HTTP/segurança, 4 cenários de integração e 15 E2E (12 de regressão OIDC/gestão e 3 de demo em desktop/tablet/mobile) passaram. Smoke adicional no entrypoint normal confirmou login sem credenciais Google e sessão isSynthetic=true; captura da página de entrada inspecionada. Nenhuma migration ou dependência nova foi necessária. Revisão/merge permanecem com o responsável técnico.

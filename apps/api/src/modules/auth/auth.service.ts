@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   ForbiddenException,
+  NotFoundException,
   HttpException,
   ServiceUnavailableException,
   UnauthorizedException,
@@ -13,6 +14,7 @@ import type {
   IdentityProvider,
   LoginChecks,
 } from './google-provider.js';
+import { DEMO_ACCOUNTS, DEMO_ISSUER } from './demo-accounts.js';
 import { GOOGLE_ISSUER } from './google-provider.js';
 import {
   ATTEMPT_COOKIE,
@@ -56,7 +58,11 @@ export class AuthService {
       );
   }
   private configured() {
-    if (!this.config.GOOGLE_CLIENT_ID || !this.config.AUTH_SECRET)
+    if (
+      this.config.AUTH_MODE !== 'google' ||
+      !this.config.GOOGLE_CLIENT_ID ||
+      !this.config.AUTH_SECRET
+    )
       throw new ServiceUnavailableException(
         'Login Google ainda não configurado.',
       );
@@ -132,6 +138,20 @@ export class AuthService {
     url.pathname = '/api/auth/google/callback';
     const identity = await this.provider.finish(url, checks);
     if (!this.allowed(identity)) throw new ForbiddenException();
+    return this.issueSession(identity, request);
+  }
+  async demoLogin(request: Request, account: '1' | '2') {
+    if (
+      this.config.AUTH_MODE !== 'demo' ||
+      this.config.NODE_ENV === 'production'
+    )
+      throw new NotFoundException();
+    if (request.headers.origin !== this.config.APP_ORIGIN)
+      throw new ForbiddenException();
+    await this.rateLimit(request, 'demo-login', 15);
+    return this.issueSession(DEMO_ACCOUNTS[account], request);
+  }
+  private async issueSession(identity: Identity, request: Request) {
     const token = randomToken();
     const expiresAt = new Date(
       Date.now() + this.config.SESSION_HOURS * 3_600_000,
@@ -189,7 +209,9 @@ export class AuthService {
       !session ||
       session.revokedAt ||
       session.expiresAt <= new Date() ||
-      !session.coach.enabled
+      !session.coach.enabled ||
+      session.coach.issuer !==
+        (this.config.AUTH_MODE === 'demo' ? DEMO_ISSUER : GOOGLE_ISSUER)
     )
       throw new UnauthorizedException();
     return {

@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINT 02: login Google/OIDC restrito, sessões revogáveis e gestão de alunos persistidos. Dashboard continua demonstrativo e identificado, separado dos cadastros reais. Garmin, convites, FIT e IA real entram em sprints posteriores.
+SPRINT 02: login demonstrativo local para os testes atuais, sessões revogáveis e gestão de alunos persistidos. Integração Google/OIDC preparada para ativação futura. Dashboard continua demonstrativo e identificado, separado dos cadastros reais. Garmin, convites, FIT e IA real entram em sprints posteriores.
 
 ## Execução local
 
@@ -30,9 +30,30 @@ Substituir o usuário se POSTGRES_USER foi alterado. Não usar `down -v` para at
 - API readiness com banco: http://127.0.0.1:3001/health/ready.
 - Swagger local: http://127.0.0.1:3001/docs, desabilitado em produção.
 
-Sem Google configurado, a página de login informa indisponibilidade; não existe bypass de autenticação. `pnpm dev` recompila API/web após alterações. API lê `.env` da raiz, Next encaminha `/api/*` para loopback 3001. Caso altere API_PORT, ajustar destino no next.config e E2E. API_INTERNAL_ORIGIN pode configurar acesso servidor → API, nunca é lido de headers do cliente.
+O `.env.example` inicia em modo demonstrativo local. Com AUTH_MODE=google e sem credenciais, a página informa indisponibilidade. `pnpm dev` recompila API/web após alterações. API lê `.env` da raiz, Next encaminha `/api/*` para loopback 3001. Caso altere API_PORT, ajustar destino no next.config e E2E. API_INTERNAL_ORIGIN pode configurar acesso servidor → API, nunca é lido de headers do cliente.
 
-## Configurar login Google real
+## Login fictício para testar agora
+
+No `.env` local:
+
+```env
+AUTH_MODE=demo
+APP_ORIGIN=http://127.0.0.1:3000
+API_HOST=127.0.0.1
+NODE_ENV=development
+```
+
+Após iniciar a API e o frontend, abrir http://127.0.0.1:3000 e escolher **Entrar como Treinador Demo 1** ou **Entrar como Treinador Demo 2**. Não precisa de conta Google, senha, cliente OAuth ou credenciais Google. PostgreSQL continua necessário para testar sessões e cadastros persistidos.
+
+As duas contas são fictícias e isoladas. A interface mantém aviso de demonstração e as respostas de sessão/alunos têm isSynthetic=true. Use apenas nomes/e-mails de teste. Cadastros feitos nessas contas permanecem sintéticos mesmo após reiniciar; o issuer específico `urn:balducore:demo` não é vinculado a uma conta Google. Uma sessão demo não é aceita ao trocar para modo Google, e vice-versa.
+
+AUTH_SECRET é opcional em demo: se vazio, a API gera chave efêmera local. Em Google, continuam obrigatórias as credenciais e uma chave válida. AUTH_MODE=demo é rejeitado em NODE_ENV=production, origem pública ou bind de API fora de loopback. Nenhum endpoint permite informar livremente uma identidade; somente as duas contas fixas estão disponíveis. A entrada demonstrativa valida origem e mantém rate limiting, cookie HttpOnly, CSRF nas mutações, expiração e logout.
+
+Para os testes atuais, a configuração e validação Google foram **adiadas por decisão do responsável técnico**. Não é necessário fazê-las para revisar a SPRINT 02 em modo demo. Não publicar esse ambiente local como sistema de acompanhamento real.
+
+## Configurar login Google real — etapa futura
+
+Antes de ativar o fluxo real, definir AUTH_MODE=google. Depois:
 
 1. No Google Cloud, criar/configurar um projeto e sua aplicação OAuth para web, com tela de consentimento e usuários de teste quando exigido pelo estado da aplicação.
 2. Registrar exatamente o retorno local `http://127.0.0.1:3000/api/auth/google/callback`. Cadastrar URL HTTPS própria para produção. Não intercambiar localhost e 127.0.0.1 sem ajustar todas as configurações.
@@ -90,9 +111,10 @@ pnpm test:integration
 pnpm build
 pnpm exec playwright install chromium
 pnpm test:e2e
+pnpm test:e2e:demo
 ```
 
-Integração valida criptografia, assinatura JWT, issuer/audience/nonce, PKCE, callback/replay/expiração, rate limit, CSRF, dois coaches, FKs, duplicidade e concorrência. E2E inicia entrypoint exclusivo com emissor OIDC local e JWTs assinados para cadastro/lista/perfil/logout, além de proteger rotas anônimas e preservar temas/responsividade. Não reutiliza servidores existentes para evitar testes contra processos errados; portas devem estar livres. Nenhuma variável ativa fixture no main. O servidor E2E recusa NODE_ENV=production. Resultados/screenshots ficam em test-results e são ignorados no Git. Dados sintéticos podem permanecer apenas no banco de testes.
+Integração valida criptografia, assinatura JWT, issuer/audience/nonce, PKCE, callback/replay/expiração, rate limit, CSRF, dois coaches, FKs, duplicidade e concorrência. E2E inicia entrypoint exclusivo com emissor OIDC local e JWTs assinados para cadastro/lista/perfil/logout, além de proteger rotas anônimas e preservar temas/responsividade. Não reutiliza servidores existentes para evitar testes contra processos errados; portas devem estar livres. Nenhuma variável ativa o emissor OIDC de teste no main. O modo local demo usa identidades próprias e não esse emissor. O servidor E2E recusa NODE_ENV=production. Resultados/screenshots ficam em test-results e são ignorados no Git. Dados sintéticos podem permanecer apenas no banco de testes.
 
 ## Estrutura e identidade visual
 
@@ -105,7 +127,7 @@ Referências em docs/design/references são a fonte visual. Cor #EF3338, dark/li
 
 ## Pendências externas
 
-Docker indisponível no WSL usado durante a entrega: testes locais usaram PostgreSQL 17.7 temporário, sem alegar execução de Compose. Login real ainda requer configuração do cliente Google e teste com conta autorizada. Sem deploy público nesta sprint.
+Docker indisponível no WSL usado durante a entrega: testes locais usaram PostgreSQL 17.7 temporário, sem alegar execução de Compose. Google real foi adiado; sua configuração não bloqueia os testes locais com login fictício. Sem deploy público nesta sprint.
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 

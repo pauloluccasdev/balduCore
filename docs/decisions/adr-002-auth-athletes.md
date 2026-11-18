@@ -67,3 +67,13 @@ AuthModule e AthletesModule concentram responsabilidades. Constraints compostas 
 Rate limiting no mesmo PostgreSQL dispensa Redis e compartilha contadores. Chaves derivadas do segredo/origem/IP minimizam exposição, expiração de um minuto; operação de limpeza documentada, sem scheduler antecipado. Auditoria registra identidade/ação/recurso, não payload pessoal. O vínculo atual é 1:1 com o cadastro do coach; histórico de transições fica para os casos de uso futuros, sem reativação manual nesta sprint.
 
 Testes usam TEST_DATABASE_URL diferente do banco operacional e emissor OIDC isolado com JWTs assinados; não há bypass no entrypoint de produção. O teste com conta Google real depende de credenciais/configuração autorizadas e segue pendente. Procedimentos operacionais estão no [README](../../README.md).
+
+## Ajuste autorizado em 2026-11-18 — login fictício local
+
+O responsável técnico determinou que o login seja fictício durante os testes atuais, sem autenticar efetivamente no Google. Google/OIDC permanece preparado, mas configurar credenciais ou validar uma conta Google real deixa de ser requisito para a revisão demonstrativa desta sprint.
+
+Decisão: AUTH_MODE=demo habilita duas identidades fixas exclusivamente locais. Ambas usam issuer urn:balducore:demo, separado do Google, com as mesmas sessões opacas, autorização por recurso, CSRF e persistência já implementadas. Não duplicar toda a autenticação nem tornar o emissor OIDC de teste um serviço do ambiente normal. A rota demo só é registrada nesse modo; origem do POST é validada e a configuração é rejeitada em produção, origem pública ou bind externo. Chave efêmera pode ser gerada localmente quando não fornecida; nenhuma chave de exemplo é usada em produção.
+
+Sem nova migration: o vínculo ao coach/issuer permite rastrear os dados demo, e sessão/alunos são marcados isSynthetic na API. Banner visível em todas as páginas autenticadas identifica conta fictícia e uso exclusivo de dados de teste. A autenticação verifica compatibilidade entre issuer e modo, impedindo misturar sessões Google/demo ou acessar cadastros de outro modo. As duas contas permitem testar isolamento sem informar identidades arbitrárias.
+
+Aceite atual: fluxo demonstrativo navegável e testes de sessão/cadastro/isolamento passando, sem exigir acesso Google. Futuro aceite Google permanece separado antes de ativar uso real. Testes OIDC automatizados continuam como regressão, sem apresentar o emissor de teste como Google real.

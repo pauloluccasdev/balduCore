@@ -48,12 +48,18 @@ export class AthletesController {
   })
   async list(@Req() request: Request, @Query() query: unknown) {
     const principal = await this.auth.authenticate(request);
-    return this.athletes.list(principal.coachId, query);
+    return {
+      ...(await this.athletes.list(principal.coachId, query)),
+      isSynthetic: this.auth.config.AUTH_MODE === 'demo',
+    };
   }
   @Get(':id')
   async get(@Req() request: Request, @Param('id') id: string) {
     const principal = await this.auth.authenticate(request);
-    return this.athletes.get(principal.coachId, id);
+    return {
+      ...(await this.athletes.get(principal.coachId, id)),
+      isSynthetic: this.auth.config.AUTH_MODE === 'demo',
+    };
   }
   @Post()
   @ApiHeader({
@@ -76,7 +82,10 @@ export class AthletesController {
     const principal = await this.auth.authenticate(request);
     this.auth.verifyMutation(request, principal);
     await this.auth.rateLimit(request, `write:${principal.coachId}`, 60);
-    return this.athletes.create(principal.coachId, body);
+    return {
+      ...(await this.athletes.create(principal.coachId, body)),
+      isSynthetic: this.auth.config.AUTH_MODE === 'demo',
+    };
   }
   @Patch(':id')
   @ApiHeader({ name: 'X-CSRF-Token', required: true })
@@ -100,6 +109,9 @@ export class AthletesController {
     const principal = await this.auth.authenticate(request);
     this.auth.verifyMutation(request, principal);
     await this.auth.rateLimit(request, `write:${principal.coachId}`, 60);
-    return this.athletes.update(principal.coachId, id, body);
+    return {
+      ...(await this.athletes.update(principal.coachId, id, body)),
+      isSynthetic: this.auth.config.AUTH_MODE === 'demo',
+    };
   }
 }

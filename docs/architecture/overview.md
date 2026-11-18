@@ -129,3 +129,7 @@ O modelo em `infra/github-actions-ci.yml` prevê instalação congelada, formata
 AuthModule valida Google OIDC e mantém sessão local no Nest; AthletesModule verifica principal e propriedade em cada recurso. Next usa apenas API com cache no-store e cookies repassados no servidor; não acessa Prisma. As páginas /, /alunos e /alunos/:id são dinâmicas e protegidas; /login é pública. Emissor assinado local só é construído pelos entrypoints de teste; sem toggle de mock no main.
 
 Persistência inicial definida pela necessidade: Coach, CoachSession, AuthAttempt, Athlete, CoachAthleteRelationship, AuditLog e RateLimitBucket. TEST_DATABASE_URL é separado do banco de uso. Material PKCE/nonce em tentativas é cifrado; tokens Google não são persistidos. Ver [ADR-002](../decisions/adr-002-auth-athletes.md), README e resultado no roadmap. Partes anteriores deste documento descrevem a sequência da fundação, não ausência atual de autenticação.
+
+## Modo demonstrativo local autorizado em 2026-11-18
+
+AUTH_MODE=demo registra entrada local com identidades fixas e issuer próprio. Reutiliza AuthService para emitir sessões e controlar acesso, sem criar fluxo Google fictício no ambiente normal. Configuração produtiva ou origem/bind públicos são rejeitados; sessões só são aceitas no modo correspondente ao issuer. Web identifica demonstração na entrada e em todas as páginas protegidas; API marca sessão/alunos sintéticos. Google/OIDC permanece preparado e sua ativação foi adiada para etapa futura.

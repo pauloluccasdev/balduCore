@@ -15,9 +15,12 @@ export class AuthController {
   @Get('status')
   status() {
     return {
-      configured: Boolean(
-        this.auth.config.GOOGLE_CLIENT_ID && this.auth.config.AUTH_SECRET,
-      ),
+      mode: this.auth.config.AUTH_MODE,
+      configured:
+        this.auth.config.AUTH_MODE === 'demo' ||
+        Boolean(
+          this.auth.config.GOOGLE_CLIENT_ID && this.auth.config.AUTH_SECRET,
+        ),
     };
   }
   @Get('google')
@@ -80,6 +83,8 @@ export class AuthController {
   async session(@Req() request: Request) {
     const principal = await this.auth.authenticate(request);
     return {
+      mode: this.auth.config.AUTH_MODE,
+      isSynthetic: this.auth.config.AUTH_MODE === 'demo',
       coach: {
         id: principal.coachId,
         name: principal.name,

@@ -5,7 +5,11 @@ import { readConfig } from '../config.js';
 import { createDatabase } from '../database.js';
 import { GoogleProvider } from '../modules/auth/google-provider.js';
 import { oidcFixture } from './oidc-fixture.js';
-export async function createTestApp(port = 0, origin?: string) {
+export async function createTestApp(
+  port = 0,
+  origin?: string,
+  mode: 'google' | 'demo' = 'google',
+) {
   let isolated = false;
   try {
     isolated = Boolean(
@@ -25,6 +29,7 @@ export async function createTestApp(port = 0, origin?: string) {
     ...process.env,
     DATABASE_URL: process.env.TEST_DATABASE_URL,
     NODE_ENV: 'test',
+    AUTH_MODE: mode,
     APP_ORIGIN:
       origin ?? `http://127.0.0.1:${Math.floor(Math.random() * 20000) + 20000}`,
     GOOGLE_CLIENT_ID: 'test-client',

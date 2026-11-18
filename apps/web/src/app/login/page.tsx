@@ -1,4 +1,5 @@
 import { API_ORIGIN } from '../../lib/server-auth';
+import { DemoLogin } from '../../components/demo-login';
 import { ThemeToggle } from '../../components/theme-toggle';
 export const dynamic = 'force-dynamic';
 export default async function Login({
@@ -7,11 +8,16 @@ export default async function Login({
   searchParams: Promise<{ error?: string }>;
 }) {
   let configured = false;
+  let mode: 'google' | 'demo' = 'google';
   try {
     const response = await fetch(`${API_ORIGIN}/auth/status`, {
       cache: 'no-store',
     });
-    if (response.ok) configured = Boolean((await response.json()).configured);
+    if (response.ok) {
+      const status = await response.json();
+      configured = Boolean(status.configured);
+      mode = status.mode === 'demo' ? 'demo' : 'google';
+    }
   } catch {
     /* Falha fechada: não prometer login disponível. */
   }
@@ -24,14 +30,20 @@ export default async function Login({
         </div>
         <p className="muted">Gestão e inteligência esportiva</p>
         <h1>Seu acompanhamento começa aqui.</h1>
-        <p>Acesso exclusivo para treinadores previamente autorizados.</p>
+        <p>
+          {mode === 'demo'
+            ? 'Acesso demonstrativo com contas fictícias. Nenhuma autenticação Google é necessária.'
+            : 'Acesso exclusivo para treinadores previamente autorizados.'}
+        </p>
         {error && (
           <p role="alert" className="form-error">
             Não foi possível entrar. Verifique a conta autorizada e tente
             novamente.
           </p>
         )}
-        {configured ? (
+        {mode === 'demo' && configured ? (
+          <DemoLogin />
+        ) : configured ? (
           <a className="button primary-button" href="/api/auth/google">
             Entrar com Google
           </a>

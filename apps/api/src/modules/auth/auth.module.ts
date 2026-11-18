@@ -1,6 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import type { Config } from '../../config.js';
+import { DemoController } from './demo.controller.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { GoogleProvider, type IdentityProvider } from './google-provider.js';
@@ -13,7 +14,12 @@ export class AuthModule {
   ): DynamicModule {
     return {
       module: AuthModule,
-      controllers: [AuthController],
+      controllers: [
+        AuthController,
+        ...(config.AUTH_MODE === 'demo' && config.NODE_ENV !== 'production'
+          ? [DemoController]
+          : []),
+      ],
       providers: [
         {
           provide: AuthService,

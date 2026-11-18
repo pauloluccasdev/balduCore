@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { randomBytes } from 'node:crypto';
 const schema = z.object({
   DATABASE_URL: z
     .string()
@@ -6,6 +7,7 @@ const schema = z.object({
     .refine((value) =>
       ['postgres:', 'postgresql:'].includes(new URL(value).protocol),
     ),
+  AUTH_MODE: z.enum(['google', 'demo']).default('google'),
   APP_ORIGIN: z.string().url().default('http://127.0.0.1:3000'),
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),
@@ -40,17 +42,34 @@ export function readConfig(environment: NodeJS.ProcessEnv): Config {
   ) {
     throw new Error('Configuração inválida: APP_ORIGIN');
   }
-  const configured = Boolean(
-    config.GOOGLE_CLIENT_ID ||
-    config.GOOGLE_CLIENT_SECRET ||
-    config.AUTH_SECRET,
-  );
+  if (config.AUTH_MODE === 'demo') {
+    const loopback = ['127.0.0.1', 'localhost', '[::1]'];
+    if (
+      config.NODE_ENV === 'production' ||
+      !loopback.includes(origin.hostname) ||
+      !['127.0.0.1', 'localhost', '::1'].includes(config.API_HOST)
+    ) {
+      throw new Error(
+        'Modo demo permitido somente em ambiente local não produtivo.',
+      );
+    }
+    // Chave efêmera exclusivamente local; não exige Google ou segredo de exemplo.
+    if (!config.AUTH_SECRET)
+      config.AUTH_SECRET = randomBytes(32).toString('base64');
+  }
+  const googleConfigured =
+    config.AUTH_MODE === 'google' &&
+    Boolean(
+      config.GOOGLE_CLIENT_ID ||
+      config.GOOGLE_CLIENT_SECRET ||
+      config.AUTH_SECRET,
+    );
   if (
-    configured &&
-    (!config.GOOGLE_CLIENT_ID ||
-      !config.GOOGLE_CLIENT_SECRET ||
-      !/^[A-Za-z0-9+/]{43}=$/.test(config.AUTH_SECRET) ||
-      Buffer.from(config.AUTH_SECRET, 'base64').length !== 32)
+    (googleConfigured &&
+      (!config.GOOGLE_CLIENT_ID || !config.GOOGLE_CLIENT_SECRET)) ||
+    ((googleConfigured || config.AUTH_MODE === 'demo') &&
+      (!/^[A-Za-z0-9+/]{43}=$/.test(config.AUTH_SECRET) ||
+        Buffer.from(config.AUTH_SECRET, 'base64').length !== 32))
   ) {
     throw new Error(
       'Configuração inválida: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AUTH_SECRET',
