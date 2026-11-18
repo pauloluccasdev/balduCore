@@ -38,6 +38,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@garmin/fitsdk':
+        specifier: 21.222.0
+        version: 21.222.0
       '@nestjs/common':
         specifier: 12.5.0
         version: 12.5.0(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2)
@@ -253,6 +256,9 @@ packages:
   '@eslint/plugin-kit@0.7.3':
     resolution: {integrity: sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@garmin/fitsdk@21.222.0':
+    resolution: {integrity: sha512-YIo/bPfvENuBKECsAT0wWromTy66Yxw3UqRB1FuAJIs8KMoJCkVPgqnUanFxkZwcAXgIN2qXaeFeRt7rvYlB0g==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2661,6 +2667,8 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@garmin/fitsdk@21.222.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
