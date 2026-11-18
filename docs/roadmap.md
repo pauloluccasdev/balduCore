@@ -1,6 +1,6 @@
 # BalduCore — roadmap técnico
 
-Status: SPRINTS 00–04 aprovadas e mescladas em main; testes com login fictício local e Google real adiado. SPRINT 05 autorizada para atividades; decisões de persistência/FIT em revisão; integração oficial Garmin bloqueada por dependência externa, mock local disponível. SPRINTS 06–11 não autorizadas. Atualização: 2026-11-18.
+Status: SPRINTS 00–04 aprovadas e mescladas em main; testes com login fictício local e Google real adiado. SPRINT 05 autorizada para atividades; SDK oficial escolhido, persistência e fluxo FIT em revisão; integração oficial Garmin bloqueada por dependência externa, mock local disponível. SPRINTS 06–11 não autorizadas. Atualização: 2026-11-18.
 
 Uma branch por sprint (`sprint/NN-descricao`), PR para main e nenhuma passagem automática à próxima sprint. Apresentar problema, plano, decisões/trade-offs e aceite antes de implementar. Encerrar com revisão, testes/resultados, limitações e documentação atualizada; merge requer autorização. O PR da SPRINT 00 não equivale a aprovação arquitetural.
 
@@ -123,3 +123,7 @@ PR da entrega: [#5 — SPRINT 04: Garmin mock e processamento assíncrono seguro
 ## Autorização da SPRINT 05
 
 PR #5 mesclado pelo responsável técnico em 2026-11-18 (2cd6f20). SPRINT 04 concluída na main. Autorizado seguir para atividades; branch sprint/05-atividades criada dessa base. Proposta de persistência de séries e importação em [ADR-005](decisions/adr-005-activities-fit.md), aguardando revisão das decisões novas antes da implementação dependente. A SPRINT 06 permanece não autorizada.
+
+Atualização da decisão de parser na SPRINT 05: responsável técnico escolheu o SDK oficial @garmin/fitsdk após esclarecer manutenção, gratuidade e licença própria. Dependência fixada em 21.222.0; compatibilidade/leitura verificadas por testes sintéticos. Persistência de séries e fluxo de processamento/retenção do FIT continuam em revisão, sem migrations ou upload implementados.
+
+Validação da preparação do SDK: build da API, 11 testes unitários/HTTP/segurança (incluindo dois cenários FIT com casos de leitura e corrupção) e lint/formatação passaram. A importação de produto, migrations e políticas de armazenamento continuam pendentes da revisão arquitetural solicitada.
