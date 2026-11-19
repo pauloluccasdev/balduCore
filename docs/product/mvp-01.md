@@ -112,7 +112,7 @@ FIT usa SDK oficial em thread limitada, somente demo local/arquivos sintéticos;
 
 [ADR-006](../decisions/adr-006-sports-analysis.md) aprovado: SportsAnalysis persistido com FK composta, revisão/hash/algoritmo, estado e snapshot validado de métricas/eventos/evidências. Worker/fila existentes fazem processamento após publicação, sem cálculo de métricas por IA. Consultas autorizadas e comparação reaplicam vínculo/aceites; revisão obsoleta e retirada impedem resultado tardio. Gráficos sincronizados usam somente séries recebidas, com redução visual que preserva extremos/lacunas; cálculos usam resolução integral. Seleções não interpolam fronteiras e distinguem cronômetro/decorrido. Regras são heurísticas demonstrativas, sem causa ou diagnóstico. IA, feedback e MVP 2 permanecem fora desta implementação.
 
-## Incremento da SPRINT 08 — em revisão
+## Incremento da SPRINT 08 — aprovado e mesclado
 
 [ADR-008](../decisions/adr-008-coach-feedback.md) aprovado. CoachFeedback representa um diário por atividade; CoachFeedbackRevision mantém snapshots JSONB validados e revisões imutáveis pela API, com autor derivado da sessão, revisão/hash da atividade e análise opcional. FKs compostas impedem associação a outro coach/aluno/atividade; transação com lock do vínculo, elegibilidade, controle otimista, revisão e auditoria evita sobrescrita concorrente e publicação parcial. Contexto antigo fica explícito e não reaplica avaliações silenciosamente. Leitura, histórico e edição exigem vínculo ativo/aceites vigentes; dados continuam demonstrativos.
 

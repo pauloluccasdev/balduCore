@@ -1,6 +1,6 @@
 # ADR-008 — Feedback do treinador e histórico de avaliações
 
-Status: aprovado pelo responsável técnico em 19/11/2026; implementação da SPRINT 08 autorizada. IA adiada como DT-IA-01. Implementado no PR #10; aceite final e merge pendentes.
+Status: aprovado pelo responsável técnico em 19/11/2026; implementação da SPRINT 08 autorizada. IA adiada como DT-IA-01. Implementado e aprovado; PR #10 mesclado em 19/11/2026, commit e93b9af.
 
 ## Problema e base existente
 
@@ -61,6 +61,6 @@ Módulo síncrono coach-feedback, migration versionada, snapshots JSONB e FKs co
 
 Layout usa selects acessíveis para categoria/origem e avaliação, mantendo cards e duas colunas das referências, com coluna única no tablet/celular. Essa adaptação acomoda paginação e eventos efetivamente disponíveis, sem reproduzir os exemplos fixos ou hipóteses de IA do PNG. A navegação reutiliza atividade/análise/perfil e não adiciona item de sidebar. Campos e erros são texto escapado, sem HTML livre. JSON bruto limitado a 64 KiB somente no PUT de feedback; demais rotas continuam rejeitando JSON acima de 16 KiB, preservando rawBody do mock assinado.
 
-Validação: seis testes de integração de feedback, incluindo falha real controlada na auditoria com rollback completo; suíte total 23 unitários/35 integração e 33 E2E. Migration aplicada em banco existente e banco novo (seis migrations). Limites, autorização, contexto obsoleto e ausência de métricas não dependem da UI. Revisão final do responsável técnico permanece pendente; não constitui homologação produtiva.
+Validação: seis testes de integração de feedback, incluindo falha real controlada na auditoria com rollback completo; suíte total 23 unitários/35 integração e 33 E2E. Migration aplicada em banco existente e banco novo (seis migrations). Limites, autorização, contexto obsoleto e ausência de métricas não dependem da UI. Entrega aprovada e mesclada pelo responsável técnico; não constitui homologação produtiva.
 
 Datas de atividade e revisões são exibidas em UTC explicitamente; E2E usa navegador em America/Sao_Paulo para verificar hidratação sem depender do fuso do servidor. Capturas dark/light e ausência de overflow verificadas em desktop/tablet/celular.

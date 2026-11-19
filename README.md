@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 implementada em revisão no PR #10: diário e histórico do treinador. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 em preparação, com decisões no ADR-009 ainda propostas. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -257,7 +257,7 @@ API em /docs: GET /activities/:id/analysis (axis, eventPage, splitPage); POST na
 
 `pnpm test:e2e:activities` valida FIT/histórico e análise nos três formatos, serialmente para respeitar a conta compartilhada. `pnpm test:e2e:analysis` executa somente os três cenários de análise. Recharts 3.11.0/react-is 19.3.1 fixados; SDK FIT permanece exclusivo da API. Docker/WSL e ativação do CI continuam pendências ambientais; testes locais usam PostgreSQL temporário.
 
-## Feedback do treinador — SPRINT 08 em revisão
+## Feedback do treinador — SPRINT 08 mesclada
 
 Com vínculo ativo e aceites válidos, abra uma atividade ou sua análise e clique em **Feedback do treinador**. Registre análise da execução, observações e decisões técnicas; adicione pontos com categoria, origem explícita (observação do treinador ou relato do aluno) e contexto. Intervalos usam metros ou segundos decorridos desde o início; quilômetros correspondem a metros (por exemplo, 1000–2000 m). Não há causa ou sensação preenchida automaticamente.
 
