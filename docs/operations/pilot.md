@@ -1,6 +1,6 @@
 # Piloto técnico local — operação e evidências da SPRINT 11
 
-Status: implementação em revisão no PR #13. ADR-011 aprovado para piloto local sintético e CI. Aceite final pendente; nenhuma autorização para publicação ou dados reais. IA continua DT-IA-01.
+Status: SPRINT 11 aprovada e mesclada no PR #13. Revisão do piloto local escolhida pelo responsável técnico; CI ainda bloqueado pela credencial. Nenhuma autorização para publicação ou dados reais. IA continua DT-IA-01.
 
 ## Alcance e bloqueios
 
@@ -107,3 +107,23 @@ Fluxo verificado: browser autenticado → proxy Next → Nest → PostgreSQL/fil
 A primeira execução da central imprimiu três testes aprovados, mas o shell encerrou com SIGTERM (143) no encerramento dos processos. A suíte foi repetida isoladamente: três aprovados e exit 0. Não houve falha de asserção nesse caso.
 
 Parecer: base verificada para revisão e testes técnicos locais sintéticos, com CI externo ainda pendente. Aceite da sprint cabe ao responsável técnico. Nenhuma ampliação automática para dados reais ou MVP 2.
+
+## Roteiro de revisão manual com o responsável técnico
+
+Abrir http://127.0.0.1:3000/login no mesmo computador; usar esse host em toda a jornada para preservar cookies/origem. Escolher **Entrar como Treinador Demo 1**, sem conta Google ou senha. Treinador Demo 2 permite conferir isolamento com uma sessão separada. Esse piloto usa o banco operacional de desenvolvimento local, separado do banco de testes automatizados; cadastros fictícios feitos manualmente persistem entre reinícios.
+
+1. Conferir dashboard, modo claro/escuro, filtros e navegação em desktop e viewport móvel. Sem alunos, os estados vazios são esperados.
+2. Em Alunos, cadastrar um aluno explicitamente fictício, com e-mail example.test, buscar e abrir o perfil.
+3. Gerar convite e copiar o link para outra aba. Concluir a verificação demonstrativa com o código disponível ao coach e aceitar os documentos de teste. Confirmar vínculo ativo e estado Garmin independente.
+4. Autorizar somente o simulador mock, quando habilitado. No perfil, simular uma atividade; atualizar processamento e conferir atividade recebida, análise, feedback, central e dashboard. Não usar uma conta Garmin real.
+5. Registrar/editar feedback e consultar o histórico. Conferir atualização das pendências sem fabricar insights de IA.
+6. Com Treinador Demo 2 em outro perfil de navegador, confirmar que o aluno não aparece; o servidor também deve negar acesso por URL/ID.
+7. Ao final da avaliação daquele aluno fictício, testar desconexão e, separadamente, retirada do acompanhamento pelo mecanismo público. Isso altera o caso de teste: conferir os estados e o bloqueio do acesso esportivo.
+
+Para relatar um problema: informar tela, ação, resultado esperado/obtido, tema/viewport e X-Request-Id quando disponível. Não enviar tokens, cookies, URLs completas de convite/retirada ou dumps. Reunir achados antes de autorizar nova funcionalidade. A passagem desses passos pelo responsável técnico não é presumida pelos testes automatizados.
+
+## Achado na revisão do piloto local — 19/11/2026
+
+Após o merge da 11, a checagem no banco de desenvolvimento encontrou overflow no dashboard em viewport de 390 px sem filtro de modalidade: o seletor Todas as modalidades terminava em 399 px. Corrigida a largura do select dentro do formulário com width:100% e min-width:0, preservando o layout. Os testes foundation/dashboard passaram a comparar scrollWidth com documentElement.clientWidth; innerWidth pode aumentar com overflow no navegador móvel e ocultar esse defeito. A revisão não alterou dados de alunos ou redefiniu o banco local.
+
+Revalidação desta correção: build API/web e sete migrations existentes sem pendências; 12 E2E de fundação/alunos e três de dashboard passaram com comparação por clientWidth, nos três formatos. Lint, formatação e diff passaram. Smoke no ambiente de desenvolvimento (não o banco E2E): readiness 200, login/logout demo, seis páginas em três viewports (18 visitas), sem overflow ou erro JS. Dashboard local leu dois cadastros e uma atividade sintética já existentes; nenhum aluno/atividade foi criado ou removido por esse smoke. Capturas dark/light e mobile após correção foram geradas; mobile inspecionado. API, web, worker e PostgreSQL foram deixados ativos em loopback para revisão manual do responsável técnico. Os 27/47/39 da sprint são evidência histórica; nesta revisão foram executados os 15 E2E pertinentes, sem alegar repetição integral.

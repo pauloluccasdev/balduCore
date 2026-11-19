@@ -1583,6 +1583,8 @@ tbody tr:last-child td {
   color: var(--muted);
 }
 .dashboard-filter select {
+  width: 100%;
+  min-width: 0;
   padding: 9px;
   border: 1px solid var(--border);
   border-radius: 8px;

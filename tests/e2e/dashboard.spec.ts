@@ -211,7 +211,9 @@ test('dashboard: indicadores persistidos, filtros, links, falha parcial e retira
     ).toBeVisible();
     expect(
       await page.evaluate(
-        () => document.documentElement.scrollWidth > window.innerWidth,
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
       ),
     ).toBe(false);
     await page.evaluate(() => window.scrollTo(0, 0));

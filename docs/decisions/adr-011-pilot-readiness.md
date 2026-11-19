@@ -1,6 +1,6 @@
 # ADR-011 — Qualidade e limites do piloto do MVP 1
 
-Status: aprovado pelo responsável técnico em 19/11/2026: piloto local sintético e ativação de CI. SPRINT 11 implementada em revisão; aceite final e merge pendentes.
+Status: aprovado pelo responsável técnico em 19/11/2026: piloto local sintético e ativação de CI. SPRINT 11 aprovada e mesclada no PR #13 em 19/11/2026, commit 6eb8665; ativação de CI permanece bloqueada pela credencial.
 
 ## Problema e diagnóstico
 
