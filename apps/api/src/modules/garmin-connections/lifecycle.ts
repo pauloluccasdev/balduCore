@@ -2,7 +2,7 @@ import { projectConnection } from '../monitoring/projection.js';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { IntegrationQueue } from '../activity-processing/queue.js';
-import { DEMO_DOCUMENTS } from '../consents/consents.service.js';
+import { visibleRelationship } from './eligibility.js';
 import { digest } from '../auth/security.js';
 export type Scope = { coachId: string; athleteId: string };
 export async function lockRelationship(
@@ -16,31 +16,14 @@ export async function lockRelationship(
   return rows[0].status;
 }
 export async function eligible(tx: Prisma.TransactionClient, scope: Scope) {
-  scope = { coachId: scope.coachId, athleteId: scope.athleteId };
-  const relationship = await tx.coachAthleteRelationship.findUnique({
-    where: { coachId_athleteId: scope },
-    include: { coach: true },
-  });
-  if (
-    !relationship ||
-    relationship.status !== 'active' ||
-    !relationship.coach.enabled
-  )
-    return false;
-  const consent = await tx.consentEvidence.findMany({
-    where: {
-      ...scope,
-      documentId: { in: DEMO_DOCUMENTS.map((doc) => doc.id) },
-    },
-  });
-  return DEMO_DOCUMENTS.every(
-    (doc) =>
-      consent.some(
-        (item) => item.documentId === doc.id && item.decision === 'accepted',
-      ) &&
-      !consent.some(
-        (item) => item.documentId === doc.id && item.decision === 'withdrawn',
-      ),
+  return (
+    (await tx.coachAthleteRelationship.count({
+      where: {
+        ...visibleRelationship,
+        coachId: scope.coachId,
+        athleteId: scope.athleteId,
+      },
+    })) > 0
   );
 }
 export async function requireEligible(

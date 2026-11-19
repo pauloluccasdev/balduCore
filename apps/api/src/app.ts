@@ -1,3 +1,4 @@
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { MonitoringModule } from './modules/monitoring/monitoring.module.js';
 import { FeedbackModule } from './modules/coach-feedback/feedback.module.js';
 import { AnalysisModule } from './modules/sports-analysis/analysis.module.js';
@@ -67,6 +68,11 @@ export async function createApp(
   @Module({
     imports: features
       ? [
+          DashboardModule.register(
+            features.client,
+            features.config,
+            features.provider,
+          ),
           MonitoringModule.register(
             features.client,
             features.config,

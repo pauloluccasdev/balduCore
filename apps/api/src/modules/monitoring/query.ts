@@ -1,5 +1,5 @@
 import { Prisma } from '../../generated/prisma/client.js';
-import { DEMO_DOCUMENTS } from '../consents/consents.service.js';
+import { visibleRelationshipSql } from '../garmin-connections/eligibility.js';
 import { ALGORITHM_VERSION } from '../sports-analysis/calculations.js';
 const currentAnalysis = Prisma.sql`a."revision" = s."inputRevision" AND a."dataHash" = s."inputHash" AND s."algorithmVersion" = ${ALGORITHM_VERSION}`;
 const meaningful = Prisma.sql`fr."inputRevision" = a."revision" AND fr."inputHash" = a."dataHash" AND (fr."analysisId" IS NULL OR fr."analysisId" = s.id) AND
@@ -30,9 +30,7 @@ export function visible(coachId: string) {
     LEFT JOIN "GarminConnection" g ON g.id = m."connectionId" AND g."coachId" = m."coachId" AND g."athleteId" = m."athleteId"
     LEFT JOIN "CoachFeedback" feedback ON feedback."activityId" = a.id AND feedback."coachId" = m."coachId"
     LEFT JOIN "CoachFeedbackRevision" fr ON fr."feedbackId" = feedback.id AND fr.version = feedback.version
-    WHERE m."coachId" = ${coachId} AND c.enabled AND r.status = 'active'
-      AND NOT EXISTS (SELECT 1 FROM "ConsentEvidence" ce WHERE ce."coachId" = m."coachId" AND ce."athleteId" = m."athleteId" AND ce."documentId" IN (${Prisma.join(DEMO_DOCUMENTS.map((doc) => doc.id))}) AND ce.decision = 'withdrawn')
-      AND (SELECT COUNT(DISTINCT ce."documentId") FROM "ConsentEvidence" ce WHERE ce."coachId" = m."coachId" AND ce."athleteId" = m."athleteId" AND ce."documentId" IN (${Prisma.join(DEMO_DOCUMENTS.map((doc) => doc.id))}) AND ce.decision = 'accepted') = ${DEMO_DOCUMENTS.length}
+    WHERE m."coachId" = ${coachId} AND ${visibleRelationshipSql()}
       AND (m.kind NOT IN ('analysis_completed','sports_events') OR s.status = 'completed')
   )`;
 }

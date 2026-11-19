@@ -1,3 +1,4 @@
+import { visibleRelationship } from '../garmin-connections/eligibility.js';
 import {
   BadRequestException,
   ConflictException,
@@ -13,7 +14,6 @@ import {
   lockRelationship,
   requireEligible,
 } from '../garmin-connections/lifecycle.js';
-import { DEMO_DOCUMENTS } from '../consents/consents.service.js';
 import { createHash } from 'node:crypto';
 import { decodeFit, FitDecodeError } from './fit-decoder.js';
 import { derivedMetrics } from './activity-data.js';
@@ -39,21 +39,6 @@ const seriesQuery = z
     limit: z.coerce.number().int().min(1).max(1000).default(200),
   })
   .strict();
-const visibleRelationship: Prisma.CoachAthleteRelationshipWhereInput = {
-  status: 'active',
-  coach: { enabled: true },
-  AND: DEMO_DOCUMENTS.map((doc) => ({
-    consents: { some: { documentId: doc.id, decision: 'accepted' } },
-  })),
-  NOT: {
-    consents: {
-      some: {
-        documentId: { in: DEMO_DOCUMENTS.map((doc) => doc.id) },
-        decision: 'withdrawn',
-      },
-    },
-  },
-};
 const include = {
   relationship: { select: { athlete: { select: { name: true } } } },
   _count: { select: { samples: true, splits: true } },

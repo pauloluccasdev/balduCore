@@ -39,7 +39,7 @@ export function monitoringQuery(raw: unknown, now = new Date()) {
     end: new Date(end.getTime() + 86400000),
   };
 }
-const dto = (row: MonitoringRow) => ({
+export const monitoringItem = (row: MonitoringRow) => ({
   id: row.id,
   athleteId: row.athleteId,
   athleteName: row.athleteName,
@@ -98,7 +98,7 @@ export class MonitoringService {
           Prisma.sql`${visible(coachId)} SELECT COUNT(*)::int AS total, COUNT(*) FILTER (WHERE ${unread})::int AS unread, COUNT(*) FILTER (WHERE "effectiveState" = 'active' AND kind IN ('feedback_pending','fit_failure','analysis_failure','sync_failure','connection_failure'))::int AS pending FROM visible WHERE ${where}`,
         );
         return {
-          items: rows.map(dto),
+          items: rows.map(monitoringItem),
           ...stats,
           page: query.page,
           limit: 20,

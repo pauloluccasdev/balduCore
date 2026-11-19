@@ -1,6 +1,6 @@
 # ADR-010 — Dashboard consolidado e semântica dos indicadores
 
-Status: proposta para revisão. SPRINT 10 autorizada para preparação em 19/11/2026, após merge do PR #11 (fea1059). Endpoint, regras dos indicadores e tratamento dos estados abaixo aguardam aprovação antes da implementação. IA permanece adiada como DT-IA-01.
+Status: aprovado pelo responsável técnico em 19/11/2026. Implementação da SPRINT 10 em revisão no PR #12; aceite final e merge pendentes. IA permanece adiada como DT-IA-01.
 
 ## Problema e diagnóstico
 
@@ -20,7 +20,7 @@ Propor DashboardModule no monólito, com serviço de leitura e DTO próprio. Nã
 
 Reutilizar predicados de elegibilidade/consentimentos das atividades e o SQL autorizado da central dentro da mesma transação, sem HTTP interno para outro controller e sem copiar uma segunda definição divergente de “pendência”. Extração pequena de predicado/função de consulta é aceitável para evitar duplicação; não reorganizar os módulos por estética.
 
-## Regras dos indicadores — para aprovação
+## Regras dos indicadores — aprovadas
 
 | Indicador/bloco                 | Definição recomendada                                                                                                                                                                                                                                                                                                                          |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -62,7 +62,7 @@ API com sessão, rate limit e filtros estritos, sem cache compartilhado. Uma tra
 
 Falha de banco/consulta impede um snapshot novo e retorna erro sanitizado. Na primeira carga, exibir indisponibilidade com retry; em atualização, pode manter a última resposta bem-sucedida com aviso e horário, sem apresentá-la como consulta atual. Não montar um dashboard novo com metade de totais antigos e metade novos. Integração desabilitada e IA adiada são estados de capacidade, não falhas de consulta. Não há chamada externa opcional capaz de derrubar as métricas básicas.
 
-## Plano após aprovação
+## Plano aprovado
 
 1. Definir DTO, predicados compartilhados mínimos, semântica de períodos/cobertura e consultas autorizadas; testes de totais conhecidos, zero/null, modalidades, fronteira UTC e isolamento A/B.
 2. GET /dashboard e OpenAPI, snapshot consistente, limites das prévias e estados de erro/indisponibilidade; testar retirada, revisão obsoleta e estado Garmin sem inferir conexão a partir de FIT.
@@ -76,4 +76,12 @@ Um coach sem dados vê zero de contagem e estados vazios verdadeiros, sem os cin
 
 Filtros mantêm distinção entre fotografia cadastral, início de atividade e atualização de pendências. Erro não produz números demonstrativos ou falso sucesso; ausência de análise não declara ausência de evento esportivo. UI mantém identidade visual e acessibilidade básica nos três formatos. IA permanece DT-IA-01 e não é marcada entregue.
 
-Riscos: consultas de agregação podem precisar de índices após medição; sem criar cache/materialização preventivamente. A central pode precisar de conciliação de fontes anteriores à 09; pendências devem refletir o escopo disponível e não prometer reconstrução histórica completa. Dados reais, retenção/exclusão, login Google/integração oficial e ativação do CI continuam pendentes. Preparação documental apenas: nenhum endpoint, dependência, migration ou funcionalidade implementada nesta etapa.
+Riscos: consultas de agregação podem precisar de índices após medição; sem criar cache/materialização preventivamente. A central pode precisar de conciliação de fontes anteriores à 09; pendências devem refletir o escopo disponível e não prometer reconstrução histórica completa. Dados reais, retenção/exclusão, login Google/integração oficial e ativação do CI continuam pendentes. A implementação não adiciona dependência ou migration; aceite final e merge continuam pendentes.
+
+## Implementação
+
+DashboardModule expõe a leitura autenticada e limitada. Consultas no mesmo snapshot Repeatable Read calculam totais no PostgreSQL; validação de resultados atuais em lotes de 100 impede truncar o indicador à prévia. Atividades, conexão e dashboard compartilham elegibilidade; pendências reutilizam o SQL autorizado e serializer da central. Nenhuma nova entidade persistente, migration, fila ou dependência.
+
+A interface substitui demo-data.ts e preserva composição, temas e navegação responsiva. Mostra cobertura/proveniência, conexão local, IA adiada e planejamento futuro. Índice de análise passa período/modalidade à consulta existente. Falha de atualização mantém somente o snapshot completo anterior, rotulado como antigo; snapshots inválidos tornam atenção indisponível sem fabricar zero.
+
+Validação da SPRINT 10: builds da API/web, validação de tipos, lint, Prettier e revisão do diff passaram. 26 testes unitários e 47 de integração PostgreSQL passaram; cobrem totais completos, null/zero, proveniência, A/B, retirada, GET sem efeitos de negócio, análise inválida/obsoleta, fronteiras UTC em sessão America/Sao_Paulo e 106 análises além do primeiro lote. 39 E2E passaram: 12 fundação/alunos, 12 demo/convites/Garmin, nove atividades/análise/feedback, três monitoramento e três dashboard, nos formatos desktop/tablet/mobile. Capturas dark/light verificadas. Execução com PostgreSQL 17.7 local; Docker e GitHub Actions não executados. Não houve nova migration.
