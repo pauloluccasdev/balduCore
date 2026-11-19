@@ -1,6 +1,6 @@
 # BalduCore — MVP 1 (operação inicial BalduTraining)
 
-Status: SPRINTS 00–04 aprovadas e mescladas; SPRINT 05 implementada em revisão. Atualização: 2026-11-18.
+Status: SPRINTS 00–05 aprovadas e mescladas; SPRINT 06 em preparação. Atualização: 2026-11-18.
 
 ## Objetivo e usuários
 

@@ -1,6 +1,6 @@
 # Modelo de domínio inicial
 
-Status: persistência das SPRINTS 02–04 mesclada; atividades/séries/FIT da SPRINT 05 em revisão. Análises, eventos esportivos, IA, feedback e monitoramento permanecem conceituais. Data: 2026-11-18.
+Status: persistência das SPRINTS 02–05 mesclada; análise determinística da SPRINT 06 em preparação. IA, feedback e monitoramento permanecem conceituais. Data: 2026-11-18.
 
 ## Entidades e invariantes
 
