@@ -20,7 +20,7 @@ export default async function History({
   const page =
     query.page && /^[1-9]\d{0,3}$/.test(query.page) ? Number(query.page) : 1;
   return (
-    <main className="main-content" id="dashboard">
+    <main className="main-content" id="dashboard" tabIndex={-1}>
       <header className="page-header">
         <div>
           <Link href={`/alunos/${id}`}>← Perfil do aluno</Link>

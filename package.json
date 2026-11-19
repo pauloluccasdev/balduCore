@@ -27,7 +27,8 @@
     "test:e2e:activities": "playwright test --config playwright.activities.config.ts",
     "test:e2e:dashboard": "playwright test --config playwright.dashboard.config.ts",
     "test:e2e:monitoring": "playwright test --config playwright.monitoring.config.ts",
-    "test:e2e:analysis": "playwright test --config playwright.activities.config.ts analysis.spec.ts"
+    "test:e2e:analysis": "playwright test --config playwright.activities.config.ts analysis.spec.ts",
+    "db:recovery:drill": "pnpm --filter @balducore/api recovery:drill"
   },
   "devDependencies": {
     "typescript": "6.0.3",

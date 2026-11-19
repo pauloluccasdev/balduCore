@@ -181,3 +181,7 @@ Alunos/conexões são atuais, esportes usam início UTC e pendências usam atual
 ## Preparação da SPRINT 11
 
 SPRINT 10 aprovada e mesclada; plano de qualidade no [ADR-011](../decisions/adr-011-pilot-readiness.md). A proposta mantém a arquitetura existente e recomenda piloto técnico local com dados sintéticos. Revisões de autorização/UX/operação, ensaio isolado de recuperação e ativação de CI serão delimitados após aprovação. Google real, Garmin oficial, políticas produtivas e IA DT-IA-01 permanecem pendentes; preparação técnica não equivale a autorização para dados reais/deploy ou entrega integral do MVP 1.
+
+## SPRINT 11 — qualidade em revisão
+
+ADR-011 aprovado para piloto técnico local sintético. Ensaio isolado de migrations/backup/restore, verificação de conteúdo cifrado/fila, medições delimitadas, sanitização de erros e melhorias de foco/tabelas estão implementados em revisão no PR #13. Ver [operação e evidências](../operations/pilot.md). Arquitetura/contratos de domínio preservados, sem fornecedor/dependência/migration nova. CI autorizado tem publicação bloqueada pelo escopo da credencial; template preparado não é CI executado. Nenhum deploy ou uso real autorizado; IA DT-IA-01 e políticas/integrações reais continuam pendentes.

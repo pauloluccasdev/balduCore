@@ -264,7 +264,7 @@ export function AnalysisWorkspace({ initial }: { initial: Workspace }) {
   }
   if (!selectionActive) range = null;
   return (
-    <main id="dashboard" className="main-content analysis-page">
+    <main id="dashboard" className="main-content analysis-page" tabIndex={-1}>
       <nav className="feedback-links" aria-label="Feedback da atividade">
         <Link
           className="button"
@@ -496,7 +496,12 @@ export function AnalysisWorkspace({ initial }: { initial: Workspace }) {
             )}
           </Card>
           <Card title={`Splits recebidos (${workspace.splits.total})`}>
-            <div className="table-scroll activities-scroll">
+            <div
+              className="table-scroll activities-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Splits da análise"
+            >
               <table>
                 <thead>
                   <tr>

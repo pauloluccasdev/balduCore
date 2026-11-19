@@ -38,7 +38,7 @@ export default async function Profile({
     ? (await invitationsResponse.json()).items
     : [];
   return (
-    <main className="main-content" id="dashboard">
+    <main className="main-content" id="dashboard" tabIndex={-1}>
       <header className="page-header">
         <div>
           <Link className="muted small" href="/alunos">

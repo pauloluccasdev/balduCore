@@ -21,7 +21,7 @@ export default async function Settings() {
     }[];
   } = await response.json();
   return (
-    <main className="main-content" id="dashboard">
+    <main className="main-content" id="dashboard" tabIndex={-1}>
       <header className="page-header">
         <div>
           <p className="eyebrow">CONTA E INTEGRAÇÕES</p>

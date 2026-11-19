@@ -1,6 +1,6 @@
 # ADR-011 — Qualidade e limites do piloto do MVP 1
 
-Status: proposta para revisão do responsável técnico. SPRINT 11 autorizada para preparação após merge da 10; decisões de alcance do piloto e ativação de CI aguardam aprovação. Nenhuma funcionalidade desta proposta implementada.
+Status: aprovado pelo responsável técnico em 19/11/2026: piloto local sintético e ativação de CI. SPRINT 11 implementada em revisão; aceite final e merge pendentes.
 
 ## Problema e diagnóstico
 
@@ -46,3 +46,9 @@ Automação de recuperação deve recusar destinos não temporários, evitar sob
 - Relatório define aptidão para piloto local sintético; dados reais/produção permanecem bloqueados pelas dependências listadas. IA segue DT-IA-01.
 
 SPRINT 11 somente será concluída após revisão e aceite do responsável técnico. Este documento não autoriza deploy nem merge direto em main.
+
+## Resultado da implementação
+
+Ensaio isolado de recuperação e teste das guardas, revisão/testes de sanitização, correções de foco/scroll por teclado e runbook implementados. [Evidências e limites](../operations/pilot.md). Sem mudanças de domínio, dependências, migrations ou deploy. Medição delimitada não justificou cache/índices adicionais.
+
+CI autorizado, mas GitHub recusou a publicação do workflow por OAuth App sem escopo workflow. Template atualizado fica em infra/github-actions-ci.yml até credencial autorizada; não houve execução de Actions. A decisão aprovada permanece válida, e a ativação é pendência ambiental explícita. Aceite final da sprint depende de revisão do responsável técnico.

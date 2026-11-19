@@ -36,6 +36,10 @@ test('dashboard persistido, filtro, tema persistido, navegação e ausência de 
   await expect(
     page.getByRole('button', { name: 'Criar treino · em breve' }),
   ).toBeDisabled();
+  const skip = page.getByRole('link', { name: 'Pular para o conteúdo' });
+  await skip.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.screenshot({
     path: testInfo.outputPath('dashboard-dark.png'),
@@ -70,6 +74,10 @@ test('dashboard persistido, filtro, tema persistido, navegação e ausência de 
       page.getByRole('navigation', { name: 'Navegação principal' }),
     ).toBeVisible();
   }
+  await page.goto('/alunos');
+  await page.getByRole('link', { name: 'Pular para o conteúdo' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
   expect(errors).toEqual([]);
 });
 test('mesma origem → proxy Next → Nest → Prisma → PostgreSQL', async ({

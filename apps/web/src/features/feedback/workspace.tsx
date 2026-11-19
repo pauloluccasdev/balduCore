@@ -288,7 +288,7 @@ export function FeedbackEditor({
   }
   const disabled = busy || loading;
   return (
-    <main className="main-content" id="dashboard">
+    <main className="main-content" id="dashboard" tabIndex={-1}>
       <header className="page-header">
         <div>
           <Link
@@ -731,7 +731,12 @@ export function FeedbackEditor({
         {!history.total && (
           <p className="empty-state">Nenhuma revisão salva.</p>
         )}
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="Histórico de revisões do diário"
+        >
           <table className="data-table">
             <thead>
               <tr>
