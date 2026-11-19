@@ -1,3 +1,4 @@
+import { AnalysisModule } from './modules/sports-analysis/analysis.module.js';
 import { ActivitiesModule } from './modules/activities/activities.module.js';
 import 'reflect-metadata';
 import { createGarminRuntime } from './modules/garmin-connections/runtime.js';
@@ -64,6 +65,12 @@ export async function createApp(
   @Module({
     imports: features
       ? [
+          AnalysisModule.register(
+            features.client,
+            features.config,
+            garmin?.service.queue,
+            features.provider,
+          ),
           ActivitiesModule.register(
             features.client,
             features.config,
@@ -148,7 +155,7 @@ export async function createApp(
       .setDescription(
         'Autenticação e alunos do treinador; convites/aceites públicos apenas no demo local. Cookies e CSRF próprios em cada jornada.',
       )
-      .setVersion('0.5.0')
+      .setVersion('0.6.0')
       .addCookieAuth(
         'balducore_session',
         { type: 'apiKey', in: 'cookie' },

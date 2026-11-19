@@ -14,12 +14,25 @@ import {
 import type { IntegrationJob } from './modules/activity-processing/queue.js';
 import { decrypt, digest } from './modules/auth/security.js';
 
+// A mesma fila também contém análises automáticas desde a SPRINT 06.
+async function fetchGarmin(app: TestApp) {
+  const queue = app.garmin.service.queue!;
+  for (;;) {
+    const [job] = await queue.boss.fetch<IntegrationJob>(queue.name, {
+      includeMetadata: true,
+    });
+    assert.ok(job, 'expected persisted queue job');
+    if (job.data.kind !== 'analysis') return job;
+    await app.garmin.worker!.process(job);
+    await queue.boss.complete(queue.name, {
+      id: job.id,
+      retryCount: job.retryCount,
+    });
+  }
+}
 async function runNext(app: TestApp) {
   const queue = app.garmin.service.queue!;
-  const [job] = await queue.boss.fetch<IntegrationJob>(queue.name, {
-    includeMetadata: true,
-  });
-  assert.ok(job, 'expected persisted queue job');
+  const job = await fetchGarmin(app);
   try {
     await app.garmin.worker!.process(job);
     await queue.boss.complete(queue.name, {
@@ -417,9 +430,7 @@ test('crash/lease e resultado tardio: supervisor recupera job e fencing evita pu
     const connection = await c.connect();
     await c.simulate('sample');
     const queue = app.garmin.service.queue!;
-    const [first] = await queue.boss.fetch<IntegrationJob>(queue.name, {
-      includeMetadata: true,
-    });
+    const first = await fetchGarmin(app);
     const normalize = app.garmin.service.provider!.normalize.bind(
       app.garmin.service.provider!,
     );
@@ -445,9 +456,7 @@ test('crash/lease e resultado tardio: supervisor recupera job e fencing evita pu
     await queue.boss.supervise(queue.name);
     await app.database.client
       .$executeRaw`UPDATE pgboss.job SET start_after = NOW() - INTERVAL '1 second' WHERE id = ${first.id}::uuid`;
-    const [second] = await queue.boss.fetch<IntegrationJob>(queue.name, {
-      includeMetadata: true,
-    });
+    const second = await fetchGarmin(app);
     assert.ok(second);
     assert.ok(second.retryCount > first.retryCount);
     await app.garmin.worker!.process(second);
@@ -548,9 +557,7 @@ test('refresh concorrente e desconexão durante processamento não restauram ace
       return normalize(payload, attempt);
     };
     const queue = app.garmin.service.queue!;
-    const [job] = await queue.boss.fetch<IntegrationJob>(queue.name, {
-      includeMetadata: true,
-    });
+    const job = await fetchGarmin(app);
     const pending = app.garmin.worker!.process(job);
     await normalizingStarted;
     assert.equal(
@@ -925,9 +932,7 @@ test('resultado com lease expirado é retentado; constraints rejeitam outro alun
       retryDelay: 0,
       retryBackoff: false,
     });
-    const [job] = await queue.boss.fetch<IntegrationJob>(queue.name, {
-      includeMetadata: true,
-    });
+    const job = await fetchGarmin(app);
     const normalize = app.garmin.service.provider!.normalize.bind(
       app.garmin.service.provider!,
     );

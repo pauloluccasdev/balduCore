@@ -135,7 +135,7 @@ export default async function Detail({
         <p className="muted small">
           Valores ausentes são —. Cadência em ciclos por minuto conforme FIT,
           sem conversão automática para passos. Não há inferência de sensação ou
-          causa. Gráficos e análise entram na Sprint 06.
+          causa. Use Analisar atividade para abrir gráficos e comparar trechos.
         </p>
         {Boolean(item.possibleDuplicates) && (
           <p role="status">
@@ -146,6 +146,12 @@ export default async function Detail({
         {item.qualityWarnings.length > 0 && (
           <p>Qualidade: {item.qualityWarnings.join(', ')}</p>
         )}
+        <Link
+          className="button primary-button"
+          href={`/analise-esportiva/${item.id}`}
+        >
+          Analisar atividade →
+        </Link>
         <Link href={`/alunos/${item.athleteId}`}>Abrir perfil do aluno →</Link>
       </Card>
       <Card title={`Splits recebidos (${splits.total})`}>

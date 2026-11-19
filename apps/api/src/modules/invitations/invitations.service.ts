@@ -1,3 +1,4 @@
+import { cancelAnalyses } from '../sports-analysis/processing.js';
 import { cancelFitImports } from '../activities/fit-processing.js';
 import type { IntegrationQueue } from '../activity-processing/queue.js';
 import {
@@ -571,6 +572,10 @@ export class InvitationsService {
       if (access.consumedAt) return { ended: true, isSynthetic: true };
       if (access.relationship.status !== 'active') throw unavailable();
       await this.consents.withdraw(tx, access.coachId, access.athleteId);
+      await cancelAnalyses(tx, {
+        coachId: access.coachId,
+        athleteId: access.athleteId,
+      });
       await cancelFitImports(tx, {
         coachId: access.coachId,
         athleteId: access.athleteId,

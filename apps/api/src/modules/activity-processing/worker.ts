@@ -1,4 +1,9 @@
 import {
+  enqueueAnalysis,
+  processAnalysis,
+  recoverAnalyses,
+} from '../sports-analysis/processing.js';
+import {
   processFitImport,
   recoverFitImports,
 } from '../activities/fit-processing.js';
@@ -24,6 +29,7 @@ export class ActivityProcessingWorker {
   ) {}
   async recoverIntents() {
     await recoverFitImports(this.garmin);
+    await recoverAnalyses(this.garmin);
     const seeds = await this.garmin.db.integrationEvent.findMany({
       where: {
         namespace: this.garmin.config.GARMIN_QUEUE_NAMESPACE,
@@ -80,6 +86,7 @@ export class ActivityProcessingWorker {
     });
   }
   async process(job: JobWithMetadata<IntegrationJob>) {
+    if (job.data.kind === 'analysis') return processAnalysis(this.garmin, job);
     if (job.data.kind === 'fit') return processFitImport(this.garmin, job);
     const { db, config } = this.garmin;
     const runToken = randomUUID();
@@ -260,6 +267,12 @@ export class ActivityProcessingWorker {
               },
             });
             await replaceDetails(tx, activity, normalized);
+            await enqueueAnalysis(
+              tx,
+              activity,
+              config.GARMIN_QUEUE_NAMESPACE,
+              this.garmin.queue,
+            );
           }
           await tx.integrationEvent.update({
             where: { id: event.id },

@@ -118,14 +118,20 @@ export function ActivityTable({ items }: { items: Activity[] }) {
               </dd>
             </dl>
             <p className="muted small">
-              Métricas ausentes aparecem como —. Gráficos e análise esportiva
-              serão entregues na Sprint 06.
+              Métricas ausentes aparecem como —. Gráficos e comparação de
+              trechos estão disponíveis em Analisar atividade.
             </p>
             <Link
               className="button primary-button"
               href={`/atividades/${activity.id}`}
             >
               Explorar dados
+            </Link>
+            <Link
+              className="button primary-button"
+              href={`/analise-esportiva/${activity.id}`}
+            >
+              Analisar atividade
             </Link>
             <Link href={`/alunos/${activity.athleteId}`}>
               Perfil do aluno →

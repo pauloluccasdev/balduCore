@@ -1,3 +1,4 @@
+import { enqueueAnalysis } from '../sports-analysis/processing.js';
 import { randomUUID } from 'node:crypto';
 import type { JobWithMetadata } from 'pg-boss';
 import { Prisma } from '../../generated/prisma/client.js';
@@ -135,6 +136,12 @@ export async function processFitImport(
           },
         });
         await replaceDetails(tx, activity, data);
+        await enqueueAnalysis(
+          tx,
+          activity,
+          config.GARMIN_QUEUE_NAMESPACE,
+          service.queue,
+        );
         if (leaseUntil <= new Date()) throw new Error('lease_expired');
         await tx.fitImport.update({
           where: { id: event.id },

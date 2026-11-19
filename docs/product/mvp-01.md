@@ -1,6 +1,6 @@
 # BalduCore — MVP 1 (operação inicial BalduTraining)
 
-Status: SPRINTS 00–04 aprovadas e mescladas; SPRINT 05 implementada em revisão. Atualização: 2026-11-18.
+Status: SPRINTS 00–05 aprovadas e mescladas; SPRINT 06 implementada em revisão. Atualização: 2026-11-18.
 
 ## Objetivo e usuários
 
@@ -107,3 +107,7 @@ Após aceites, aluno pode autorizar/recusar conexão fictícia em simulador expl
 Decisões aprovadas no [ADR-005](../decisions/adr-005-activities-fit.md): métricas resumidas em Activity, amostras/splits relacionais com FK composta e publicação de revisão atômica; conexão opcional para origem manual_fit e vínculo direto obrigatório. FitImport registra hash por coach, staging normalizado temporário, estado/tentativas/fencing e atividade resultante. Consulta e publicação exigem vínculo ativo e aceites vigentes, com isolamento por treinador.
 
 FIT usa SDK oficial em thread limitada, somente demo local/arquivos sintéticos; bruto, GPS e identificadores externos são descartados. Fila existente atende mock e FIT independentemente de autorização Garmin; encerramento cancela importações pendentes, desconexão Garmin não cancela importação manual. Dados ausentes não são estimados. Histórico/detalhes paginados não incluem gráficos, análise determinística de eventos ou IA das próximas sprints. Integração oficial e uso produtivo continuam dependências externas e de revisão.
+
+## Incremento da SPRINT 06 — em revisão
+
+[ADR-006](../decisions/adr-006-sports-analysis.md) aprovado: SportsAnalysis persistido com FK composta, revisão/hash/algoritmo, estado e snapshot validado de métricas/eventos/evidências. Worker/fila existentes fazem processamento após publicação, sem cálculo de métricas por IA. Consultas autorizadas e comparação reaplicam vínculo/aceites; revisão obsoleta e retirada impedem resultado tardio. Gráficos sincronizados usam somente séries recebidas, com redução visual que preserva extremos/lacunas; cálculos usam resolução integral. Seleções não interpolam fronteiras e distinguem cronômetro/decorrido. Regras são heurísticas demonstrativas, sem causa ou diagnóstico. IA, feedback e MVP 2 permanecem fora desta implementação.

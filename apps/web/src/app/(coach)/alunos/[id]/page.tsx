@@ -80,6 +80,12 @@ export default async function Profile({
             >
               Consultar histórico →
             </Link>
+            <Link
+              className="button"
+              href={`/analise-esportiva?athleteId=${athlete.id}`}
+            >
+              Análises do aluno →
+            </Link>
             {session.mode === 'demo' &&
               athlete.relationship?.status === 'active' && (
                 <FitImport athleteId={athlete.id} />

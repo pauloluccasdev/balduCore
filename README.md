@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–04 mescladas; SPRINT 05 em revisão: histórico de atividades, métricas/splits/amostras e importação FIT de teste. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; gráficos/análises e IA são das próximas sprints.
+SPRINTS 01–05 mescladas; SPRINT 06 em revisão: gráficos, segmentos e análise determinística. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece na próxima sprint.
 
 ## Execução local
 
@@ -225,7 +225,7 @@ Docker indisponível no WSL usado durante a entrega: testes locais usaram Postgr
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 
-Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–04 mescladas; SPRINT 05 em revisão. Merge e início da 06 dependem do responsável técnico.
+Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–05 mescladas; SPRINT 06 implementada em revisão, conforme ADR-006 aprovado. Próxima sprint depende de autorização.
 
 ## Atividades e FIT de teste — SPRINT 05
 
@@ -240,3 +240,19 @@ Reenvio do mesmo hash/coach retorna a mesma importação. Mesmo arquivo em outro
 API documentada em /docs: GET /activities (q, athleteId, sport, source, from, to, status, page, limit), GET /activities/:id, /samples e /splits (page/limit), GET/POST /athletes/:id/fit-imports. Upload exige application/octet-stream, sessão/CSRF/Origin e X-Demo-File=true. Lista até 100, séries até 1000 por página; interface usa 20 e 100. Cadência em ciclos/min conforme FIT, sem dobrar automaticamente valores de corrida.
 
 Validação de navegador: `pnpm test:e2e:activities` executa os três formatos em servidor próprio e serialmente, respeitando a quota de upload por coach. `pnpm test:e2e:demo` preserva as regressões de demo/convites/Garmin sem ultrapassar o limite real de login da conta compartilhada. Não desabilitar proteções para acelerar testes.
+
+## Análise esportiva — SPRINT 06
+
+Abrir **Análise Esportiva** na sidebar, **Análises do aluno** no perfil ou **Analisar atividade** no histórico/detalhe. Novas publicações FIT/mock enfileiram análise automaticamente; para atividades anteriores, usar **Solicitar análise**. GET não cria trabalho. **Atualizar análise** acompanha estado e revisão atual; processo é eventual, com worker do mesmo backend. Falhas transitórias retentam até cinco vezes; falha terminal permite nova solicitação explícita do treinador. Não há backfill global.
+
+A tela contém seis métricas recebidas/derivadas, ritmo, FC, cadência e elevação disponíveis, comparação e eventos. Gráficos compartilham cursor/eixo; dois cliques selecionam o trecho A e controles numéricos oferecem alternativa acessível. Clique em split ou **Investigar splits** preenche os controles. Escolha dois intervalos e **Comparar trechos**; **Limpar seleção** remove contexto ativo. Distância na UI em km, tempo em segundos desde início e splits numerados a partir de um. A API usa metros e ordinais de split a partir de zero.
+
+Nenhum limite de km é interpolado: resultados mostram fronteiras efetivamente observadas. Distância incompleta/regressiva desabilita esse eixo e mantém tempo. Ausência e velocidade zero não viram ritmo infinito, médias não viram séries e timer não é rotulado como tempo em movimento. Médias de sensores de trechos são aritméticas das amostras disponíveis, com contagem/lacunas; não são médias temporais. Splits completos agregam ritmo pela razão das somas de duração/distância na mesma base. Dados ausentes/bases divergentes tornam métricas parciais, sem preenchimento artificial.
+
+Até 2000 pontos observados por série são enviados ao gráfico, preservando extremos em buckets e separações por lacuna; cálculos usam todos os dados. Intervalos >30 s, nulos e horários repetidos/regressivos quebram a curva. Marcadores representam início de splits com evento da página carregada; eixo de distância exige amostra no timestamp exato. A localização não prova o instante de uma mudança.
+
+Regras v1 são demonstrativas e fixas: ritmo entre splits comparáveis ≥30 s/km e ≥15%; FC média ≥10 bpm; cadência ≥5 ciclos/min e ≥10%. Elegibilidade e evidências detalhadas no [ADR-006](docs/decisions/adr-006-sports-analysis.md). Sem interpretação de causa, diagnóstico ou sensação do aluno. AI Coach/feedback ficam nas 07/08; o painel lateral atual é determinístico.
+
+API em /docs: GET /activities/:id/analysis (axis, eventPage, splitPage); POST na mesma rota com objeto vazio; POST /activities/:id/analysis/compare com inputRevision, inputHash e dois segmentos (kind=time|distance|splits, from, to). Comparação de revisão divergente retorna 409; recursos sem autorização não são retornados. Eventos (50) e splits (100) paginados. Snapshots concluídos são imutáveis; não presumir reprocessamento de séries antigas substituídas. Retenção produtiva continua pendente.
+
+`pnpm test:e2e:activities` valida FIT/histórico e análise nos três formatos, serialmente para respeitar a conta compartilhada. `pnpm test:e2e:analysis` executa somente os três cenários de análise. Recharts 3.11.0/react-is 19.3.1 fixados; SDK FIT permanece exclusivo da API. Docker/WSL e ativação do CI continuam pendências ambientais; testes locais usam PostgreSQL temporário.

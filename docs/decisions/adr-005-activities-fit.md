@@ -1,6 +1,6 @@
 # ADR-005 — Atividades, séries e importação FIT
 
-Status: aprovado pelo responsável técnico; implementação da SPRINT 05 em revisão. SDK oficial, tabelas relacionais, decodificação isolada com descarte do bruto e limites aprovados na instrução “pode continuar então”. Data: 2026-11-18.
+Status: aprovado e implementado; SPRINT 05 mesclada no PR #7 (78eb10e). SDK oficial, tabelas relacionais, decodificação isolada com descarte do bruto e limites aprovados na instrução “pode continuar então”. Data: 2026-11-18.
 
 ## Base confirmada
 

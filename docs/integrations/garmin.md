@@ -1,6 +1,6 @@
 # Integração Garmin
 
-Status: infraestrutura/mock da SPRINT 04 aprovados e mesclados; incremento de atividades/FIT da SPRINT 05 em revisão; provider oficial bloqueado por dependência externa. Nenhum endpoint, payload ou escopo Garmin foi presumido. Consulta pública atualizada: 2026-11-18. As seções de fluxo oficial abaixo continuam desenho condicionado ao acesso autorizado.
+Status: infraestrutura/mock da SPRINT 04 aprovados e mesclados; incremento de atividades/FIT da SPRINT 05 aprovado e mesclado; provider oficial bloqueado por dependência externa. Nenhum endpoint, payload ou escopo Garmin foi presumido. Consulta pública atualizada: 2026-11-18. As seções de fluxo oficial abaixo continuam desenho condicionado ao acesso autorizado.
 
 ## Evidência pública e dependências
 

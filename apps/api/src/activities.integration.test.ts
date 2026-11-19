@@ -49,6 +49,21 @@ test('FIT demo sem Garmin: fila/publicação, filtros, amostras, replay, isolame
       (value) => value.status === 'processed',
     );
     assert.equal(event.normalized, null);
+    const analysis = await wait(
+      () =>
+        app.database.client.sportsAnalysis.findFirst({
+          where: { activityId: event.activityId! },
+        }),
+      (value) => value?.status === 'completed',
+    );
+    assert.equal(
+      analysis?.inputHash,
+      (
+        await app.database.client.activity.findUniqueOrThrow({
+          where: { id: event.activityId! },
+        })
+      ).dataHash,
+    );
     assert.ok(event.activityId);
     assert.equal(event.attempts, 1);
     assert.equal(
