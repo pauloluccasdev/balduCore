@@ -18,7 +18,7 @@ export default async function AnalysisIndex({
   const value = (key: string) =>
     typeof params[key] === 'string' ? (params[key] as string) : '';
   const query = new URLSearchParams();
-  for (const key of ['q', 'athleteId', 'page'])
+  for (const key of ['q', 'athleteId', 'page', 'from', 'to', 'sport'])
     if (value(key)) query.set(key, value(key));
   const response = await serverApi(`/activities?${query}`);
   const data: ActivityList | null = response.ok ? await response.json() : null;
@@ -46,11 +46,23 @@ export default async function AnalysisIndex({
         {value('athleteId') && (
           <input type="hidden" name="athleteId" value={value('athleteId')} />
         )}
+        {['from', 'to', 'sport'].map((key) =>
+          value(key) ? (
+            <input key={key} type="hidden" name={key} value={value(key)} />
+          ) : null,
+        )}
         <button className="button primary-button">Buscar atividades</button>
         <Link className="button" href="/analise-esportiva">
           Limpar
         </Link>
       </form>
+      {(value('from') || value('to') || value('sport')) && (
+        <p className="muted small">
+          Recorte: {value('from') || 'início livre'} a{' '}
+          {value('to') || 'fim livre'} UTC ·{' '}
+          {sports[value('sport')] ?? 'Todas as modalidades'}
+        </p>
+      )}
       <Card
         title="Atividades disponíveis"
         aside={<Badge>{data?.total ?? 0} atividades</Badge>}

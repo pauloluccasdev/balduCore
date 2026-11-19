@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 implementada em revisão no PR #11: Central de Monitoramento. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 implementada em revisão no PR #12, conforme ADR-010 aprovado. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -212,7 +212,7 @@ Integração também valida convites, resgate/aceite/encerramento concorrentes, 
 
 ## Estrutura e identidade visual
 
-- apps/web: páginas públicas/protegidas, componentes, tokens e fixtures do dashboard.
+- apps/web: páginas públicas/protegidas, componentes, tokens e dashboard consolidado autorizado.
 - apps/api: Nest modular Auth/Athletes/Invitations/Consents/Garmin/Activities/ActivityProcessing, worker, Prisma e testes.
 - infra: Compose, inicialização do banco de testes e modelo de CI.
 - docs: arquitetura, domínio, decisões, roadmap e oito PNGs originais.
@@ -269,7 +269,7 @@ API (sessão de treinador; PUT exige Origin/CSRF): GET/PUT /activities/:id/feedb
 
 Aplicar migration com pnpm db:deploy e pnpm db:test:deploy para os respectivos bancos configurados. pnpm test:integration inclui os seis cenários de feedback. Executar E2E específico: pnpm exec playwright test --config playwright.activities.config.ts feedback.spec.ts (build prévio necessário). Nenhuma dependência ou segredo novo. Políticas produtivas de retenção/exclusão e homologação com dados reais continuam pendentes.
 
-## Central de Monitoramento — SPRINT 09 em revisão
+## Central de Monitoramento — SPRINT 09 mesclada
 
 Abra **Central de Monitoramento** na sidebar (/monitoramento). A página mostra atividades disponíveis, análises concluídas, eventos esportivos agrupados, falhas terminais e **Sem feedback nesta revisão**. Um texto, ponto ou avaliação salvo no diário atual resolve essa última pendência; isso não valida todas as regras nem gera conclusão técnica automática. Limpar todo o diário pode reabrir a pendência. Nova revisão de atividade exige feedback no contexto atual após sua análise concluir.
 
@@ -288,3 +288,15 @@ pnpm --filter @balducore/api maintenance reconcile-monitoring --coach UUID_DO_CO
 Tipos: activity, analysis, fit, integration ou connection; limite 1..10000 fontes por execução, lotes de até 100. Se nextCursor não for nulo, retomar com --cursor UUID_RETORNADO; uma consulta final vazia pode ser necessária. Resultado scanned/projected conta fontes visitadas/elegíveis, não novos alertas. Repetir é idempotente; não usar timestamp de reconstrução como instante original de falha. Logs/CLI não imprimem payload, nomes ou credenciais.
 
 Testes: pnpm test, pnpm test:integration e pnpm test:e2e:monitoring (build prévio para E2E). A suíte tem servidor próprio para respeitar os limites de login demo, além das suítes base/demo/atividades existentes. Template CI foi atualizado, mas continua inativo até liberar escopo workflow. Decisões em [ADR-009](docs/decisions/adr-009-monitoring.md). Sem serviço externo ou dependência nova; retenção/exclusão produtiva continuam pendentes.
+
+## Dashboard consolidado — SPRINT 10 em revisão
+
+`GET /dashboard?period=30` aceita 7, 30 ou 90 dias UTC inclusivos até hoje e modalidade opcional (`sport`). A API exige sessão, aplica rate limit e devolve um snapshot de leitura Repeatable Read, sem novas tabelas, migrations ou dependências. A composição dark/light preserva as referências; as fixtures fixas foram removidas.
+
+Alunos e conexões são uma fotografia atual. Atividades e volumes usam início da atividade; pendências operacionais usam atualização e não recebem filtro de modalidade. Prévia de cinco atividades/eventos, seis alunos e três pendências não limita os totais. Links preservam os filtros realmente suportados pelo destino.
+
+Volume separa modalidade e proveniência, mostrando valores conhecidos/ausentes: zero conhecido permanece zero e ausência permanece indisponível. Atenção conta atividades distintas com eventos da análise determinística atual; snapshots inválidos deixam esse bloco indisponível, mantendo os indicadores básicos. São validados todos os snapshots atuais em lotes de 100.
+
+Dados esportivos e estado Garmin exigem vínculo ativo e aceites vigentes. Retirada remove o acesso na próxima consulta; cadastro básico continua disponível conforme a gestão de alunos. FIT não comprova conexão Garmin. Conexão é estado local, mock é simulação e integração oficial permanece indisponível. IA continua DT-IA-01 e planejamento continua MVP 2.
+
+Atualização é manual. Falha inicial mostra indisponibilidade; falha ao atualizar preserva o snapshot anterior com aviso e horário. Não há polling, escrita de negócio em GET ou preenchimento com dados fictícios. `pnpm test:e2e:dashboard` exercita dados persistidos, filtros/navegação, erro, isolamento e retirada em desktop/tablet/mobile.

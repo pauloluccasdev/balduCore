@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole('link', { name: 'Entrar com Google' }).click();
   await expect(page).toHaveURL('/');
 });
-test('dashboard sintético, filtro, tema persistido, navegação e ausência de overflow', async ({
+test('dashboard persistido, filtro, tema persistido, navegação e ausência de overflow', async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
@@ -13,19 +13,26 @@ test('dashboard sintético, filtro, tema persistido, navegação e ausência de 
   await expect(
     page.getByRole('heading', { name: 'Dashboard', exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('note')).toContainText('sintéticos');
+  await expect(page.getByRole('note')).toContainText('persistidos autorizados');
   await expect(page.getByRole('note')).toContainText(
-    'Garmin não está integrada',
+    'Garmin oficial indisponível',
   );
-  await expect(page.getByRole('table')).toHaveCount(1);
-  await expect(page.locator('tbody tr')).toHaveCount(8);
+  expect(await page.locator('tbody tr').count()).toBeLessThanOrEqual(5);
   await page.getByRole('button', { name: '7 dias', exact: true }).click();
-  await expect(page.locator('tbody tr')).toHaveCount(4);
   await expect(
     page.getByRole('button', { name: '7 dias', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.locator('tbody tr').count()).toBeLessThanOrEqual(5);
   await page.getByRole('button', { name: '30 dias', exact: true }).click();
-  await expect(page.locator('tbody tr')).toHaveCount(8);
+  await expect(
+    page.getByRole('button', { name: '30 dias', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(
+    page.getByRole('heading', {
+      name: 'Interpretação por IA adiada',
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Criar treino · em breve' }),
   ).toBeDisabled();
