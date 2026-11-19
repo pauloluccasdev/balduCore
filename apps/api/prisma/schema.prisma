@@ -76,6 +76,8 @@ model CoachAthleteRelationship {
   consents ConsentEvidence[]
   withdrawalAccesses WithdrawalAccess[]
   garminConnection GarminConnection?
+  activities Activity[]
+  fitImports FitImport[]
   @@unique([coachId, athleteId])
   @@index([coachId, status])
 }
@@ -276,13 +278,14 @@ model IntegrationEvent {
   @@index([namespace, status])
 }
 
-// Envelope mínimo da SPRINT 04; detalhes esportivos e consultas entram na 05.
+// Dados esportivos normalizados; revisões publicam resumo e detalhes atomicamente.
 model Activity {
   id String @id @default(uuid())
   coachId String
   athleteId String
-  connectionId String
-  connection GarminConnection @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  connectionId String?
+  connection GarminConnection? @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
   generation Int
   externalId String
   revision Int
@@ -292,14 +295,82 @@ model Activity {
   startedAt DateTime
   durationSeconds Float?
   distanceMeters Float?
+  timerSeconds Float?
+  elapsedSeconds Float?
+  durationBasis String @default("provided")
+  avgHeartRateBpm Float?
+  maxHeartRateBpm Float?
+  avgCadenceRpm Float?
+  totalAscentMeters Float?
+  qualityWarnings String[] @default([])
+  samples ActivitySample[]
+  splits ActivitySplit[]
+  fitImport FitImport?
   dataHash String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([connectionId, generation, externalId])
+  @@unique([coachId, athleteId, id])
   @@index([coachId, athleteId, startedAt])
 }
 
 model WorkerHeartbeat {
   name String @id
   seenAt DateTime
+}
+
+model ActivitySample {
+  coachId String
+  athleteId String
+  activityId String
+  activity Activity @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Cascade)
+  ordinal Int
+  timestamp DateTime
+  distanceMeters Float?
+  speedMetersPerSecond Float?
+  heartRateBpm Float?
+  cadenceRpm Float?
+  altitudeMeters Float?
+  @@id([activityId, ordinal])
+  @@index([coachId, activityId, timestamp])
+}
+
+model ActivitySplit {
+  coachId String
+  athleteId String
+  activityId String
+  activity Activity @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Cascade)
+  ordinal Int
+  startedAt DateTime?
+  endedAt DateTime?
+  distanceMeters Float?
+  timerSeconds Float?
+  elapsedSeconds Float?
+  avgHeartRateBpm Float?
+  avgCadenceRpm Float?
+  @@id([activityId, ordinal])
+}
+
+model FitImport {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  fileHash String
+  normalized Json?
+  namespace String
+  status IntegrationEventStatus @default(queued)
+  activityId String? @unique
+  activity Activity? @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Restrict)
+  jobId String?
+  attempts Int @default(0)
+  runToken String?
+  leaseUntil DateTime?
+  errorCode String?
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+  @@unique([coachId, fileHash])
+  @@unique([coachId, athleteId, activityId])
+  @@index([coachId, athleteId, createdAt])
+  @@index([namespace, status])
 }

@@ -11,6 +11,7 @@ export async function createTestApp(
   origin?: string,
   mode: 'google' | 'demo' = 'google',
   worker = false,
+  garminDisabled = false,
 ) {
   let isolated = false;
   try {
@@ -32,7 +33,7 @@ export async function createTestApp(
     DATABASE_URL: process.env.TEST_DATABASE_URL,
     NODE_ENV: 'test',
     AUTH_MODE: mode,
-    GARMIN_PROVIDER: mode === 'demo' ? 'mock' : 'disabled',
+    GARMIN_PROVIDER: mode === 'demo' && !garminDisabled ? 'mock' : 'disabled',
     GARMIN_TOKEN_KEY: randomBytes(32).toString('base64'),
     GARMIN_MOCK_SIGNING_KEY: randomBytes(32).toString('base64'),
     GARMIN_QUEUE_NAMESPACE: `test-${randomBytes(8).toString('hex')}`,

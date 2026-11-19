@@ -1,6 +1,6 @@
 # Arquitetura inicial
 
-Status: arquitetura-base aprovada; SPRINTS 00–03 mescladas e SPRINT 04 implementada em revisão. Atualização: 2026-11-18. Decisões: [ADR-001](../decisions/adr-001-stack.md) e [ADR-004](../decisions/adr-004-garmin-processing.md).
+Status: arquitetura-base aprovada; SPRINTS 00–04 mescladas e SPRINT 05 implementada em revisão. Atualização: 2026-11-18. Decisões: [ADR-001](../decisions/adr-001-stack.md) e [ADR-004](../decisions/adr-004-garmin-processing.md).
 
 ## Diagnóstico
 
@@ -149,3 +149,9 @@ GarminConnection guarda somente credenciais cifradas e hash de conta; attempts t
 Disconnect transacional limpa credenciais ativas, incrementa geração, invalida tentativas e cancela publicação de atividades; revogação externa usa intenção cifrada própria e retentativas. A retirada pública da 03 chama esse mesmo caso de uso. Mesmo com mock desabilitado, a retirada mantém intenção durável; worker recupera intenções sem job ao ser habilitado. Autorização cancelada durante callback revoga o resultado do provider; falha na compensação gera intenção persistida.
 
 Configurações e perfil mostram processamento e mock; páginas públicas continuam sem sessão de coach. Convite de finalidade Garmin permite reconexão de aluno ativo com nova verificação demo e sem novos consentimentos. Leitura de atividades exige vínculo ativo; a SPRINT 04 expõe só contagem e estados de recebimento, não implementa a experiência de histórico da 05. Biblioteca gerencia seu schema apenas no ambiente mock local; deploy produtivo da fila e contrato oficial aguardam definição.
+
+## Incremento da SPRINT 05 — em revisão
+
+Decisões aprovadas no [ADR-005](../decisions/adr-005-activities-fit.md): métricas resumidas em Activity, amostras/splits relacionais com FK composta e publicação de revisão atômica; conexão opcional para origem manual_fit e vínculo direto obrigatório. FitImport registra hash por coach, staging normalizado temporário, estado/tentativas/fencing e atividade resultante. Consulta e publicação exigem vínculo ativo e aceites vigentes, com isolamento por treinador.
+
+FIT usa SDK oficial em thread limitada, somente demo local/arquivos sintéticos; bruto, GPS e identificadores externos são descartados. Fila existente atende mock e FIT independentemente de autorização Garmin; encerramento cancela importações pendentes, desconexão Garmin não cancela importação manual. Dados ausentes não são estimados. Histórico/detalhes paginados não incluem gráficos, análise determinística de eventos ou IA das próximas sprints. Integração oficial e uso produtivo continuam dependências externas e de revisão.

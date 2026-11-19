@@ -1119,3 +1119,110 @@ tbody tr:last-child td {
 .invitation-panel > .badge {
   justify-self: start;
 }
+
+.activities-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 20px;
+  align-items: start;
+}
+.activities-layout > * {
+  min-width: 0;
+}
+.activities-scroll {
+  max-height: 560px;
+  overflow: auto;
+}
+.activity-summary {
+  display: grid;
+  gap: 16px;
+}
+.activity-summary h3 {
+  font-size: 18px;
+  margin: 0;
+}
+.activity-summary p {
+  margin: 0;
+}
+.activity-select {
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 4px 0;
+}
+.activity-select small {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+  font-weight: 400;
+}
+.selected-activity {
+  background: var(--surface-raised);
+}
+.activity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin: 24px 0;
+}
+.activity-filters label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  flex: 1 1 130px;
+}
+.activity-filters input,
+.activity-filters select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+}
+.import-status-list {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  padding: 0;
+}
+.import-status-list li {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+}
+@media (max-width: 1200px) {
+  .activities-layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 767px) {
+  .activity-filters label {
+    flex-basis: calc(50% - 12px);
+  }
+}
+.activities-scroll {
+  position: relative;
+}
+.activity-metrics {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1100px) {
+  .activity-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .activity-metrics .metric:last-child {
+    grid-column: auto;
+  }
+}

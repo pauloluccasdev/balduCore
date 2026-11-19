@@ -2,7 +2,7 @@ import { PgBoss, fromPrisma, type JobWithMetadata } from 'pg-boss';
 import type { Logger } from 'pino';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { Config } from '../../config.js';
-export type IntegrationJob = { eventId: string };
+export type IntegrationJob = { eventId: string; kind?: 'fit' };
 export class IntegrationQueue {
   readonly boss: PgBoss;
   readonly name: string;
@@ -30,6 +30,13 @@ export class IntegrationQueue {
   }
   async send(tx: Prisma.TransactionClient, eventId: string) {
     return this.boss.send(this.name, { eventId }, { db: fromPrisma(tx) });
+  }
+  async sendFit(tx: Prisma.TransactionClient, eventId: string) {
+    return this.boss.send(
+      this.name,
+      { eventId, kind: 'fit' },
+      { db: fromPrisma(tx) },
+    );
   }
   async work(handler: (job: JobWithMetadata<IntegrationJob>) => Promise<void>) {
     const options = {

@@ -1,6 +1,6 @@
 # Modelo de domínio inicial
 
-Status: modelo evolutivo; persistência de autenticação/alunos implementada na SPRINT 02, demais entidades conceituais. Data: 2026-11-11.
+Status: persistência das SPRINTS 02–04 mesclada; atividades/séries/FIT da SPRINT 05 em revisão. Análises, eventos esportivos, IA, feedback e monitoramento permanecem conceituais. Data: 2026-11-18.
 
 ## Entidades e invariantes
 
@@ -98,3 +98,9 @@ Invitation ganha purpose (accompaniment por padrão; garmin para recuperação),
 IntegrationEvent é inbox/registro operacional: identidade única conexão/geração/tipo/entrega, hash para colisões, payload cifrado, namespace/jobId e estados queued/processing/retry/processed/ignored/failed/cancelled, tentativas e erro sanitizado. Falhas permanentes/exauridas permanecem nesse registro para revisão/redrive, mesmo se o job de transporte for concluído. runToken/leaseUntil impedem commit tardio. A biblioteca mantém tabelas próprias para claim/retry; não duplicamos ProcessingJob como tabela do domínio. WorkerHeartbeat registra somente disponibilidade por namespace.
 
 Activity é envelope mínimo normalizado (origem, isSynthetic, externo/revisão, modalidade, início UTC, distância/duração opcionais e hash); sem samples/splits/análises/IA nesta etapa. Unicidade conexão/geração/externo, FKs compostas e comparação de revisão preservam isolamento e ordem; mesma revisão com conteúdo diferente requer revisão, não sobrescrita silenciosa. Campos ausentes permanecem null. Payload de atividade é limpo após processamento/cancelamento; material de revogação somente após sucesso. Retenção de falhas/metadados exige política antes de uso real.
+
+## Incremento da SPRINT 05 — em revisão
+
+Decisões aprovadas no [ADR-005](../decisions/adr-005-activities-fit.md): métricas resumidas em Activity, amostras/splits relacionais com FK composta e publicação de revisão atômica; conexão opcional para origem manual_fit e vínculo direto obrigatório. FitImport registra hash por coach, staging normalizado temporário, estado/tentativas/fencing e atividade resultante. Consulta e publicação exigem vínculo ativo e aceites vigentes, com isolamento por treinador.
+
+FIT usa SDK oficial em thread limitada, somente demo local/arquivos sintéticos; bruto, GPS e identificadores externos são descartados. Fila existente atende mock e FIT independentemente de autorização Garmin; encerramento cancela importações pendentes, desconexão Garmin não cancela importação manual. Dados ausentes não são estimados. Histórico/detalhes paginados não incluem gráficos, análise determinística de eventos ou IA das próximas sprints. Integração oficial e uso produtivo continuam dependências externas e de revisão.

@@ -1,3 +1,4 @@
+import { ActivitiesModule } from './modules/activities/activities.module.js';
 import 'reflect-metadata';
 import { createGarminRuntime } from './modules/garmin-connections/runtime.js';
 import { GarminModule } from './modules/garmin-connections/garmin.module.js';
@@ -63,6 +64,12 @@ export async function createApp(
   @Module({
     imports: features
       ? [
+          ActivitiesModule.register(
+            features.client,
+            features.config,
+            garmin?.service.queue,
+            features.provider,
+          ),
           GarminModule.register(
             features.client,
             features.config,
@@ -134,13 +141,14 @@ export async function createApp(
     },
   );
   app.useBodyParser('json', { limit: '16kb' });
+  app.useBodyParser('raw', { type: 'application/octet-stream', limit: '5mb' });
   if (exposeDocs) {
     const spec = new DocumentBuilder()
       .setTitle('BalduCore API')
       .setDescription(
         'Autenticação e alunos do treinador; convites/aceites públicos apenas no demo local. Cookies e CSRF próprios em cada jornada.',
       )
-      .setVersion('0.4.0')
+      .setVersion('0.5.0')
       .addCookieAuth(
         'balducore_session',
         { type: 'apiKey', in: 'cookie' },

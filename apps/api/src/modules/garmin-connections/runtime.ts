@@ -11,7 +11,7 @@ export async function createGarminRuntime(
   logger: Logger,
 ) {
   const queue =
-    config.GARMIN_PROVIDER === 'mock'
+    config.GARMIN_PROVIDER === 'mock' || config.AUTH_MODE === 'demo'
       ? new IntegrationQueue(config, logger)
       : undefined;
   try {
@@ -23,7 +23,9 @@ export async function createGarminRuntime(
   const service = new GarminService(
     client,
     config,
-    queue ? new GarminMockProvider(config.GARMIN_MOCK_SIGNING_KEY) : undefined,
+    config.GARMIN_PROVIDER === 'mock'
+      ? new GarminMockProvider(config.GARMIN_MOCK_SIGNING_KEY)
+      : undefined,
     queue,
   );
   const worker = queue

@@ -1,3 +1,5 @@
+import { detailFields } from '../activities/activity-data.js';
+import type { ActivityData } from '../activities/activity-data.js';
 import { createHmac } from 'node:crypto';
 import { UnauthorizedException } from '@nestjs/common';
 import { z } from 'zod';
@@ -19,10 +21,12 @@ export interface ProviderCredentials {
   refreshRejected: boolean;
   revokeFailures: number;
 }
-export interface ActivityEnvelope {
+export interface ActivityEnvelope extends Omit<
+  ActivityData,
+  'durationSeconds' | 'distanceMeters'
+> {
   externalId: string;
   revision: number;
-  sport: string;
   startedAt: string;
   durationSeconds: number | null;
   distanceMeters: number | null;
@@ -66,9 +70,10 @@ const deliverySchema = z
   .strict();
 const activitySchema = z
   .object({
+    ...detailFields,
     externalId: z.string().min(1).max(128),
     revision: z.number().int().min(1).max(1_000_000),
-    sport: z.enum(['running', 'cycling', 'walking']),
+    sport: z.enum(['running', 'cycling', 'walking', 'swimming', 'other']),
     startedAt: z.iso.datetime({ offset: true }),
     durationSeconds: z.number().finite().positive().max(604800).nullable(),
     distanceMeters: z.number().finite().nonnegative().max(2_000_000).nullable(),

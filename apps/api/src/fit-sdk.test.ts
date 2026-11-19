@@ -1,60 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  Decoder,
-  Encoder,
-  Profile,
-  Stream,
-  type FileIdMesg,
-  type RecordMesg,
-  type LapMesg,
-  type SessionMesg,
-} from '@garmin/fitsdk';
+import { Decoder, Stream } from '@garmin/fitsdk';
 
-// Fixtures binárias geradas, exclusivamente sintéticas; nenhuma atividade de pessoa real.
-function sampleActivity() {
-  const start = new Date('2026-11-18T12:00:00.000Z');
-  const end = new Date(start.getTime() + 20_000);
-  const encoder = new Encoder();
-  const fileId: FileIdMesg = {
-    type: 'activity',
-    manufacturer: 'development',
-    timeCreated: start,
-  };
-  const records: RecordMesg[] = [
-    { timestamp: start, distance: 0, speed: 0 },
-    {
-      timestamp: new Date(start.getTime() + 10_000),
-      distance: 40,
-      speed: 4,
-      heartRate: 150,
-    },
-    { timestamp: end, distance: 90, speed: 5 },
-  ];
-  const lap: LapMesg = {
-    messageIndex: 0,
-    timestamp: end,
-    startTime: start,
-    totalDistance: 90,
-    totalTimerTime: 20,
-    totalElapsedTime: 22,
-  };
-  const session: SessionMesg = {
-    timestamp: end,
-    startTime: start,
-    sport: 'running',
-    totalDistance: 90,
-    totalTimerTime: 20,
-    totalElapsedTime: 22,
-    firstLapIndex: 0,
-    numLaps: 1,
-  };
-  encoder.onMesg(Profile.MesgNum.FILE_ID, fileId);
-  for (const record of records) encoder.onMesg(Profile.MesgNum.RECORD, record);
-  encoder.onMesg(Profile.MesgNum.LAP, lap);
-  encoder.onMesg(Profile.MesgNum.SESSION, session);
-  return Buffer.from(encoder.close());
-}
+import { sampleActivity } from './test-support/fit-fixture.js';
 
 test('FIT SDK oficial: import ESM/tipos, integridade e leitura de sessão, splits e amostras em unidades do arquivo', () => {
   const bytes = sampleActivity();
