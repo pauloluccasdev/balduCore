@@ -146,6 +146,9 @@ export default async function Detail({
         {item.qualityWarnings.length > 0 && (
           <p>Qualidade: {item.qualityWarnings.join(', ')}</p>
         )}
+        <Link className="button" href={`/atividades/${item.id}/feedback`}>
+          Feedback do treinador →
+        </Link>
         <Link
           className="button primary-button"
           href={`/analise-esportiva/${item.id}`}

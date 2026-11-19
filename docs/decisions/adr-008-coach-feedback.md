@@ -1,6 +1,6 @@
 # ADR-008 — Feedback do treinador e histórico de avaliações
 
-Status: proposta para revisão. Preparação da SPRINT 08 autorizada em 19/11/2026; implementação e decisões abaixo aguardam aprovação. IA adiada como DT-IA-01. Nenhuma migration ou funcionalidade criada nesta etapa.
+Status: aprovado pelo responsável técnico em 19/11/2026; implementação da SPRINT 08 autorizada. IA adiada como DT-IA-01. Implementado no PR #10; aceite final e merge pendentes.
 
 ## Problema e base existente
 
@@ -41,7 +41,7 @@ Proposta de limites: 4000 caracteres por campo textual principal, 20 pontos por 
 
 Sem novas dependências, fila, serviço externo ou tabela de hipóteses. Feedback é síncrono e transacional. Logs/auditoria guardam ação, recurso, autor e instante, nunca os textos livres. Renderizar como texto, sem HTML arbitrário. Rate limiting e proteção de mutação seguem os mecanismos existentes.
 
-## Plano de implementação após aprovação
+## Plano aprovado de implementação
 
 1. Migration versionada dos agregados/revisões e restrições; schemas, autorização, transação de edição e auditoria.
 2. API de consulta/salvamento/histórico e documentação; testes de isolamento, vínculo/aceites, concorrência e contexto obsoleto.
@@ -54,3 +54,13 @@ Sem novas dependências, fila, serviço externo ou tabela de hipóteses. Feedbac
 O treinador salva e reabre seu diário e decisões; edição mantém autoria/data/conteúdo anteriores; duas escritas concorrentes têm somente um vencedor. Coach B não lê, altera ou lista feedback de A, incluindo IDs de revisão; encerramento/retirada bloqueiam todas as rotas. Eventos pertencem ao snapshot exato, segmentos inválidos e contexto obsoleto são rejeitados. Falha de persistência não gera revisão parcial nem limpa o formulário. Nada atribui sensações ao aluno sem relato registrado. Feedback continua funcional sem provider de IA e sem análise concluída.
 
 Riscos: texto livre pode conter dados sensíveis; minimizar exposição e não enviá-lo a fornecedores. Snapshots exigem limite de tamanho e política de retenção. Distinguir contexto histórico de atual para não apresentar avaliação antiga como válida para atividade atualizada. Ainda não há aprovação de dados reais ou deploy produtivo. Docker/CI permanecem limitações ambientais documentadas, sem alegar execução nesta preparação.
+
+## Evidência de implementação
+
+Módulo síncrono coach-feedback, migration versionada, snapshots JSONB e FKs compostas implementados sem dependências novas. Controle de versão rejeita replay antigo com 409; reenvio do conteúdo idêntico com a versão corrente não cria revisão extra. Autoria é a identidade do coach da sessão; nome exibido na consulta corresponde ao perfil atual, sem alterar o identificador autoral persistido. Consulta do histórico não altera a versão corrente.
+
+Layout usa selects acessíveis para categoria/origem e avaliação, mantendo cards e duas colunas das referências, com coluna única no tablet/celular. Essa adaptação acomoda paginação e eventos efetivamente disponíveis, sem reproduzir os exemplos fixos ou hipóteses de IA do PNG. A navegação reutiliza atividade/análise/perfil e não adiciona item de sidebar. Campos e erros são texto escapado, sem HTML livre. JSON bruto limitado a 64 KiB somente no PUT de feedback; demais rotas continuam rejeitando JSON acima de 16 KiB, preservando rawBody do mock assinado.
+
+Validação: seis testes de integração de feedback, incluindo falha real controlada na auditoria com rollback completo; suíte total 23 unitários/35 integração e 33 E2E. Migration aplicada em banco existente e banco novo (seis migrations). Limites, autorização, contexto obsoleto e ausência de métricas não dependem da UI. Revisão final do responsável técnico permanece pendente; não constitui homologação produtiva.
+
+Datas de atividade e revisões são exibidas em UTC explicitamente; E2E usa navegador em America/Sao_Paulo para verificar hidratação sem depender do fuso do servidor. Capturas dark/light e ausência de overflow verificadas em desktop/tablet/celular.

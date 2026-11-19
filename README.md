@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 implementada em revisão no PR #10: diário e histórico do treinador. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -251,8 +251,20 @@ Nenhum limite de km é interpolado: resultados mostram fronteiras efetivamente o
 
 Até 2000 pontos observados por série são enviados ao gráfico, preservando extremos em buckets e separações por lacuna; cálculos usam todos os dados. Intervalos >30 s, nulos e horários repetidos/regressivos quebram a curva. Marcadores representam início de splits com evento da página carregada; eixo de distância exige amostra no timestamp exato. A localização não prova o instante de uma mudança.
 
-Regras v1 são demonstrativas e fixas: ritmo entre splits comparáveis ≥30 s/km e ≥15%; FC média ≥10 bpm; cadência ≥5 ciclos/min e ≥10%. Elegibilidade e evidências detalhadas no [ADR-006](docs/decisions/adr-006-sports-analysis.md). Sem interpretação de causa, diagnóstico ou sensação do aluno. AI Coach/feedback ficam nas 07/08; o painel lateral atual é determinístico.
+Regras v1 são demonstrativas e fixas: ritmo entre splits comparáveis ≥30 s/km e ≥15%; FC média ≥10 bpm; cadência ≥5 ciclos/min e ≥10%. Elegibilidade e evidências detalhadas no [ADR-006](docs/decisions/adr-006-sports-analysis.md). Sem interpretação de causa, diagnóstico ou sensação do aluno. AI Coach permanece adiado; o painel lateral atual é determinístico e oferece acesso ao feedback da SPRINT 08.
 
 API em /docs: GET /activities/:id/analysis (axis, eventPage, splitPage); POST na mesma rota com objeto vazio; POST /activities/:id/analysis/compare com inputRevision, inputHash e dois segmentos (kind=time|distance|splits, from, to). Comparação de revisão divergente retorna 409; recursos sem autorização não são retornados. Eventos (50) e splits (100) paginados. Snapshots concluídos são imutáveis; não presumir reprocessamento de séries antigas substituídas. Retenção produtiva continua pendente.
 
 `pnpm test:e2e:activities` valida FIT/histórico e análise nos três formatos, serialmente para respeitar a conta compartilhada. `pnpm test:e2e:analysis` executa somente os três cenários de análise. Recharts 3.11.0/react-is 19.3.1 fixados; SDK FIT permanece exclusivo da API. Docker/WSL e ativação do CI continuam pendências ambientais; testes locais usam PostgreSQL temporário.
+
+## Feedback do treinador — SPRINT 08 em revisão
+
+Com vínculo ativo e aceites válidos, abra uma atividade ou sua análise e clique em **Feedback do treinador**. Registre análise da execução, observações e decisões técnicas; adicione pontos com categoria, origem explícita (observação do treinador ou relato do aluno) e contexto. Intervalos usam metros ou segundos decorridos desde o início; quilômetros correspondem a metros (por exemplo, 1000–2000 m). Não há causa ou sensação preenchida automaticamente.
+
+Avalie somente eventos determinísticos disponíveis; hipótese de IA permanece pendente. **Salvar diário** publica uma revisão. Histórico abre versões anteriores somente para leitura com autor, data e contexto. O perfil lista diários do aluno; /alunos/:id/feedback oferece paginação. Se outra sessão editar, o servidor retorna conflito e mantém seu texto local; use **Recarregar versão salva** para conferir o conteúdo persistido, confirmando o descarte das alterações locais. Rascunhos não são persistidos automaticamente e fechar a página sem salvar pode descartá-los.
+
+Uma atividade/análise atualizada não reaproveita avaliações antigas como atuais. Confirme o novo contexto, revise os textos e adicione pontos atuais; as avaliações antigas permanecem na revisão histórica. Encerrar vínculo ou retirar aceites bloqueia consulta e edição de todos os diários desse acompanhamento. Não há portal do aluno ou envio de feedback.
+
+API (sessão de treinador; PUT exige Origin/CSRF): GET/PUT /activities/:id/feedback; GET /activities/:id/feedback/revisions?page=1; GET /activities/:id/feedback/revisions/:version; GET /athletes/:id/feedback?page=1. GET do diário pagina eventos em até 50 por página; demais listas usam 20 itens. PUT exige expectedVersion, inputRevision/inputHash, analysisId opcional nulo, content e confirmContext quando aplicável. Schema e limites estão no Swagger local e [ADR-008](docs/decisions/adr-008-coach-feedback.md).
+
+Aplicar migration com pnpm db:deploy e pnpm db:test:deploy para os respectivos bancos configurados. pnpm test:integration inclui os seis cenários de feedback. Executar E2E específico: pnpm exec playwright test --config playwright.activities.config.ts feedback.spec.ts (build prévio necessário). Nenhuma dependência ou segredo novo. Políticas produtivas de retenção/exclusão e homologação com dados reais continuam pendentes.

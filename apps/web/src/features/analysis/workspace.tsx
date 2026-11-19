@@ -265,6 +265,14 @@ export function AnalysisWorkspace({ initial }: { initial: Workspace }) {
   if (!selectionActive) range = null;
   return (
     <main id="dashboard" className="main-content analysis-page">
+      <nav className="feedback-links" aria-label="Feedback da atividade">
+        <Link
+          className="button"
+          href={`/atividades/${initial.activity.id}/feedback`}
+        >
+          Feedback do treinador →
+        </Link>
+      </nav>
       <header className="page-header">
         <div>
           <Link
@@ -778,7 +786,7 @@ export function AnalysisWorkspace({ initial }: { initial: Workspace }) {
               Consultar dados recebidos →
             </Link>
             <p className="muted small">
-              AI Coach: Sprint 07. Feedback do treinador: Sprint 08.
+              AI Coach: adiado como débito técnico DT-IA-01.
             </p>
           </Card>
         </aside>

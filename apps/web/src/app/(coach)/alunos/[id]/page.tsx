@@ -1,3 +1,4 @@
+import { AthleteFeedbackHistory } from '../../../../features/feedback/athlete-history';
 import { FitImport } from '../../../../features/activities/fit-import';
 import { GarminPanel } from '../../../../features/garmin/garmin-panel';
 import {
@@ -68,6 +69,9 @@ export default async function Profile({
               relationshipStatus={athlete.relationship?.status ?? 'pending'}
               initial={garmin}
             />
+          </Card>
+          <Card title="Diários do treinador">
+            <AthleteFeedbackHistory athleteId={athlete.id} />
           </Card>
           <Card title="Histórico esportivo">
             <p className="muted small">
