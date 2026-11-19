@@ -1,6 +1,6 @@
 # Arquitetura inicial
 
-Status: arquitetura-base aprovada; SPRINTS 00–06 mescladas e SPRINT 07 em preparação. Atualização: 2026-11-18. Decisões: [ADR-001](../decisions/adr-001-stack.md) e [ADR-004](../decisions/adr-004-garmin-processing.md).
+Status: arquitetura-base aprovada; SPRINTS 00–06 mescladas e SPRINT 07 adiada como débito técnico DT-IA-01. Atualização: 2026-11-18. Decisões: [ADR-001](../decisions/adr-001-stack.md) e [ADR-004](../decisions/adr-004-garmin-processing.md).
 
 ## Diagnóstico
 

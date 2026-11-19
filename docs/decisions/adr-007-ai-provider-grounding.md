@@ -1,6 +1,6 @@
 # ADR-007 — Assistente IA, escolha de provedor e evidências autorizadas
 
-Status: proposta para revisão; responsável técnico pediu revisar provedores antes de escolher. SPRINT 07 autorizada para preparação, sem fornecedor/modelo/SDK ou envio externo aprovados. Base: PR #8 mesclado (d47b4ff). Data: 2026-11-18.
+Status: adiado por decisão do responsável técnico em 2026-11-19; proposta não aprovada. SPRINT 07 registrada como débito técnico DT-IA-01 no roadmap. Nenhum fornecedor/modelo/SDK, orçamento ou envio externo aprovado. Conteúdo abaixo preservado para revisão na retomada; preços e alternativas precisam de revalidação.
 
 ## Problema e base confirmada
 
