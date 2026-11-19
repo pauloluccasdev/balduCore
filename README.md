@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 implementada em revisão no PR #12, conforme ADR-010 aprovado. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 mesclada no PR #12, conforme ADR-010 aprovado. SPRINT 11 em preparação no ADR-011. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -289,7 +289,7 @@ Tipos: activity, analysis, fit, integration ou connection; limite 1..10000 fonte
 
 Testes: pnpm test, pnpm test:integration e pnpm test:e2e:monitoring (build prévio para E2E). A suíte tem servidor próprio para respeitar os limites de login demo, além das suítes base/demo/atividades existentes. Template CI foi atualizado, mas continua inativo até liberar escopo workflow. Decisões em [ADR-009](docs/decisions/adr-009-monitoring.md). Sem serviço externo ou dependência nova; retenção/exclusão produtiva continuam pendentes.
 
-## Dashboard consolidado — SPRINT 10 em revisão
+## Dashboard consolidado — SPRINT 10 mesclada
 
 `GET /dashboard?period=30` aceita 7, 30 ou 90 dias UTC inclusivos até hoje e modalidade opcional (`sport`). A API exige sessão, aplica rate limit e devolve um snapshot de leitura Repeatable Read, sem novas tabelas, migrations ou dependências. A composição dark/light preserva as referências; as fixtures fixas foram removidas.
 

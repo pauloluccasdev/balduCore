@@ -172,8 +172,12 @@ Tela contextual preserva dark/light, sidebar e cards das referências; resumo re
 
 Central funcional na sidebar, filtros e paginação, atualização manual, contextos obsoletos identificados e eventos agrupados. Ausência de feedback significativo atual gera pendência após análise concluída; salvar resolve, limpar ou mudar revisão pode reabrir. CLI explícita e limitada concilia fontes antigas, sem escrita em GET ou varredura global. Sem dados de IA, envio externo ou dashboard consolidado. Detalhes de operação/testes/limitações no README e roadmap; aceite final pendente.
 
-## SPRINT 10 — dashboard consolidado em revisão
+## SPRINT 10 — dashboard consolidado mesclado
 
-[ADR-010](../decisions/adr-010-dashboard.md) aprovado; implementação no PR #12 aguardando aceite. Read model calculado de cadastros, vínculos/aceites, conexões, atividades/análises e monitoramento existentes. GET /dashboard usa snapshot Repeatable Read, autorização por recurso, totais completos e prévias limitadas; não cria tabelas, migrations ou contadores persistentes.
+[ADR-010](../decisions/adr-010-dashboard.md) aprovado; implementação aprovada e mesclada no PR #12. Read model calculado de cadastros, vínculos/aceites, conexões, atividades/análises e monitoramento existentes. GET /dashboard usa snapshot Repeatable Read, autorização por recurso, totais completos e prévias limitadas; não cria tabelas, migrations ou contadores persistentes.
 
 Alunos/conexões são atuais, esportes usam início UTC e pendências usam atualização sem modalidade. Volume mantém null/zero, cobertura e proveniência. Atenção exige análise da revisão/hash/algoritmo atuais; conteúdo inválido torna o indicador derivado indisponível. Retirada remove acesso esportivo e conexão, preservando a gestão cadastral autorizada. UI deixa explícitos dados sintéticos, Garmin oficial indisponível, IA adiada e planejamento MVP 2. Detalhes de operação e validação no README/roadmap; SPRINT 11 não iniciada.
+
+## Preparação da SPRINT 11
+
+SPRINT 10 aprovada e mesclada; plano de qualidade no [ADR-011](../decisions/adr-011-pilot-readiness.md). A proposta mantém a arquitetura existente e recomenda piloto técnico local com dados sintéticos. Revisões de autorização/UX/operação, ensaio isolado de recuperação e ativação de CI serão delimitados após aprovação. Google real, Garmin oficial, políticas produtivas e IA DT-IA-01 permanecem pendentes; preparação técnica não equivale a autorização para dados reais/deploy ou entrega integral do MVP 1.
