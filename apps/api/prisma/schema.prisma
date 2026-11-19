@@ -306,6 +306,7 @@ model Activity {
   samples ActivitySample[]
   splits ActivitySplit[]
   fitImport FitImport?
+  analyses SportsAnalysis[]
   dataHash String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -372,5 +373,39 @@ model FitImport {
   @@unique([coachId, fileHash])
   @@unique([coachId, athleteId, activityId])
   @@index([coachId, athleteId, createdAt])
+  @@index([namespace, status])
+}
+
+
+enum AnalysisStatus {
+  queued
+  processing
+  retry
+  completed
+  failed
+  cancelled
+}
+
+model SportsAnalysis {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  activityId String
+  activity Activity @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Cascade)
+  inputRevision Int
+  inputHash String
+  algorithmVersion String
+  namespace String
+  status AnalysisStatus @default(queued)
+  result Json?
+  jobId String?
+  attempts Int @default(0)
+  runToken String?
+  leaseUntil DateTime?
+  errorCode String?
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+  @@unique([activityId, inputRevision, inputHash, algorithmVersion])
+  @@index([coachId, athleteId, activityId, createdAt])
   @@index([namespace, status])
 }

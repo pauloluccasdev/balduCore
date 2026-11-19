@@ -23,7 +23,7 @@ const navigation = [
   {
     label: 'Análise Esportiva',
     icon: ChartNoAxesCombined,
-    sprint: 'Sprint 06',
+    sprint: null,
   },
   { label: 'Assistente IA', icon: Sparkles, sprint: 'Sprint 07' },
   { label: 'Central de Monitoramento', icon: Bell, sprint: 'Sprint 09' },
@@ -56,7 +56,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 ? '/'
                 : label === 'Atividades'
                   ? '/atividades'
-                  : '/alunos';
+                  : label === 'Análise Esportiva'
+                    ? '/analise-esportiva'
+                    : '/alunos';
             const active =
               href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (

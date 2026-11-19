@@ -1,6 +1,6 @@
 # ADR-006 — Análise esportiva determinística e investigação de trechos
 
-Status: proposta para revisão do responsável técnico. SPRINT 06 autorizada para preparação; decisões abaixo aguardam aprovação antes de migrations, instalação ou código de produto. Base: PR #7 mesclado (78eb10e). Data: 2026-11-18.
+Status: decisões aprovadas pelo responsável técnico (“sim.. pode começar”); SPRINT 06 implementada para revisão, sem declaração de conclusão antes do aceite. Base: PR #7 mesclado (78eb10e). Data: 2026-11-18.
 
 ## Problema e base disponível
 
@@ -18,7 +18,7 @@ Relidas as referências Análise esportiva dark/light: breadcrumb, seis indicado
 
 Sem LLM/AI Coach, validação de insights, edição de feedback, prescrição, GPS, dados reais ou integração Garmin oficial. Login fictício e proveniência da 05 permanecem. Feedback e IA serão identificados como etapas futuras sem rotas/formulários decorativos.
 
-## Alternativas e recomendação
+## Alternativas revisadas e recomendação aprovada
 
 | Decisão      | Recomendação                                                                                                                                                                                                                                              | Alternativa e trade-off                                                                                                                                                                                                                                                                 |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,7 +38,7 @@ Jobs carregam somente o identificador da análise/discriminante. Capturar resumo
 
 Leituras, solicitação de cálculo, séries, segmentos e comparação exigem sessão/coach e vínculo/aceites vigentes; mutações exigem CSRF/Origin e rate limit. Encerramento cancela análises pendentes e impede resultado tardio; desconexão Garmin mantém acesso a atividades permitidas pelo vínculo, como na 05. Auditoria/logs sanitizados. Retenção/exclusão de análises entra na política produtiva ainda pendente, sem prometer descarte retroativo já implementado.
 
-## Política de métricas e qualidade — proposta
+## Política de métricas e qualidade — aprovada
 
 1. Resumo do dispositivo permanece separado de métricas calculadas. timerSeconds é tempo de cronômetro, elapsedSeconds é decorrido; não chamar timer de tempo em movimento. Não inferir pausas sem eventos de timer, hoje não persistidos.
 2. Ritmo médio = duração válida / distância positiva em km, com base timer/elapsed/provided explícita. Não comparar durações de bases diferentes. Ritmo instantâneo somente de velocidade recebida positiva: 1000 / m/s; velocidade zero não vira ritmo infinito nem desaparece do dado original. Não inferir velocidade de distância parcial nesta etapa.
@@ -49,7 +49,7 @@ Leituras, solicitação de cálculo, séries, segmentos e comparação exigem se
 7. Renderizar até 2000 pontos observados por série, preservando extremos em buckets e separações por lacuna. Redução só para visualização; backend usa resolução integral para cálculos, comparação e eventos. Pontos exibidos retêm referência à amostra de origem; UI informa redução. Eventos têm referência própria de split/intervalo, não dependem de sobreviver à redução visual.
 8. Sem dados suficientes, apresentar indisponibilidade e motivo. Diferença entre fontes/resumo/séries não é corrigida silenciosamente. Evidência identifica origem, revisão/hash e método, sem alegar causalidade, diagnóstico ou sensação do aluno.
 
-## Regras iniciais para aprovação de domínio
+## Regras iniciais aprovadas para demonstração
 
 Heurísticas locais para destacar diferenças observadas, não limites científicos/individualizados. Cada evento apresenta regra, referência, diferença absoluta/relativa e condição de elegibilidade. Avaliar pares adjacentes de splits completos, sem pular dados ausentes. Nenhum evento por falta de amostras, e nenhum valor de alerta extraído das imagens.
 
@@ -61,7 +61,7 @@ Heurísticas locais para destacar diferenças observadas, não limites científi
 
 FC/cadência exigem também a comparabilidade de distância da primeira regra quando ambas as distâncias existem; ausência de distância é explicitada. Nenhuma regra compara esportes ou atividades diferentes nesta sprint. Sem splits elegíveis, gráficos e investigação de amostras continuam disponíveis, mas esses eventos não são fabricados. Limiar exatamente igual é inclusivo; testar limites de cada regra.
 
-## Plano de implementação após aprovação
+## Plano de implementação aprovado
 
 1. Evoluir schema/migration com SportsAnalysis e integrar ciclo de revisão/cancelamento/enfileiramento ao pipeline atual, mantendo compatibilidade com jobs da 04/05.
 2. Implementar funções puras de qualidade, métricas, segmentos, comparação e regras, com fixtures sintéticas e evidência versionada.
@@ -79,4 +79,18 @@ FC/cadência exigem também a comparabilidade de distância da primeira regra qu
 - Coach B e aluno anônimo não consultam/solicitam análises, séries ou comparações do coach A. CSRF/validação/limites e FK composta verificados.
 - Build, tipos, lint, formatação, migration em banco vazio, testes unitários/integração e E2E pertinentes. Evidência de compatibilidade da biblioteca antes de concluir instalação.
 
-Nesta preparação foram inspecionados código/documentação e referências; nenhum endpoint, migration, dependência ou teste de produto novo foi implementado. Aprovação solicitada para persistência/execução, seleção sem interpolação e política de métricas/regras/limites acima.
+Na preparação inicial houve somente inspeção e documentação. Após a aprovação explícita, a implementação descrita abaixo foi realizada na mesma branch/PR, sem iniciar a SPRINT 07.
+
+## Consolidação da implementação
+
+SportsAnalysis usa AnalysisStatus próprio e FK composta; snapshots concluídos permanecem imutáveis. Nova revisão cancela pendências anteriores e enfileira análise da revisão atual na transação de publicação de mock/FIT. Atividades antigas possuem ação explícita de solicitação. Falha terminal pode ser solicitada novamente pelo dono, com auditoria e contador reiniciado de forma explícita; request repetido de snapshot concluído não o altera. Recovery também finaliza leases vencidos da quinta tentativa, pois o transporte não oferece um sexto claim após crash. Retirada cancela pendências sob lock do vínculo. GET não enfileira análise.
+
+GET /activities/:id/analysis retorna visão consistente da atividade, estado/snapshot atual, quatro séries para visualização e splits paginados. Parâmetros: axis=time|distance, eventPage (50 eventos), splitPage (100 splits). Snapshot integral é validado; eventos retornados paginados. POST na mesma rota recebe objeto vazio e responde 202; POST /compare recebe exatamente dois trechos, inputRevision e inputHash obrigatórios, rejeitando revisão divergente com 409. Janela de tempo em segundos desde o início, distância em metros e splits por ordinal zero na API; UI usa km e número de split a partir de um. GET, POST e comparação têm quotas separadas, além de sessão/coach, vínculo/aceites, CSRF/Origin nas mutações e limites de entrada. Resultados de comparação não são persistidos.
+
+Recharts 3.11.0, react-is 19.3.1 e lockfile fixados após consulta dos metadados do registro npm: peers aceitam React 19 e Node >=18; build/tipos locais verificam uso com React 19.3.1/Next 16.4.6/Node 24. Charts são carregados no cliente sob demanda, sem levar o SDK FIT ou módulos de API ao bundle. Redução visual compartilha índices nos quatro canais e preserva os extremos de cada canal por bucket, mantendo o cursor por valor sincronizado. Seleção direta usa a inversa da escala ajustada ao dado observado, independente do hover. Cursores e seleção usam o eixo comum; controles por formulário/tabela permitem uso sem apontador. Nulos e timestamps repetidos/regressivos quebram a curva, além das lacunas de 30 s. Separadores visuais não são observações e não entram nos cálculos.
+
+Marcadores representam o início recebido do split com evento, não o instante comprovado de uma alteração. No eixo de distância só aparecem com amostra no timestamp exato do split; não estimar distância para posicionar marcador. Marcadores correspondem à página de eventos carregada; os eventos completos permanecem no snapshot. Evidências incluem bases, deltas, limiares, ordinais e marcador de origem quando disponível.
+
+Limites: heurísticas demonstrativas fixas, sem calibração por treinador ou validação científica; não explicam causa. Sem interpolação, inferência de pausas ou tempo em movimento. Seleção por distância depende de progressão completa válida; trechos temporais estacionários preservam distância observada zero. Séries antigas substituídas na 05 não são reconstruídas; valores usados nas evidências ficam no snapshot. Retenção produtiva, distribuição de quotas e integração oficial continuam pendentes. IA/feedback/prescrição não implementados. A leitura/redução de séries é limitada a 20 mil amostras; avaliar cache/worker adicional de projeção apenas se medição justificar.
+
+Fonte dos metadados de compatibilidade: [registro npm Recharts](https://registry.npmjs.org/recharts/latest), consultado antes da instalação; versão instalada e peers registrados no lockfile. Não usar latest em instalação automática.
