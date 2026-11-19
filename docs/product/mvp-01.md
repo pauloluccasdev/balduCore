@@ -1,6 +1,6 @@
 # BalduCore — MVP 1 (operação inicial BalduTraining)
 
-Status: SPRINTS 00–06 aprovadas e mescladas; SPRINT 07 adiada como débito técnico DT-IA-01. Atualização: 2026-11-19.
+Status: SPRINTS 00–06 e 08–11 aprovadas e mescladas no alcance local sintético. SPRINT 07 adiada como DT-IA-01; MVP 1 integral e uso com dados reais permanecem pendentes. Revisão manual do piloto autorizada. Atualização: 2026-11-19.
 
 ## Objetivo e usuários
 

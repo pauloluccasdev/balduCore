@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 mesclada no PR #12, conforme ADR-010 aprovado. SPRINT 11 implementada em revisão no PR #13, conforme ADR-011 aprovado. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 mesclada no PR #12, conforme ADR-010 aprovado. SPRINT 11 aprovada e mesclada no PR #13, conforme ADR-011. Próxima atividade: revisão do piloto local sintético. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
 
 ## Execução local
 

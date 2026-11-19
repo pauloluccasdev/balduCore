@@ -56,7 +56,9 @@ test('dashboard persistido, filtro, tema persistido, navegação e ausência de 
   });
   expect(
     await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
+      () =>
+        document.documentElement.scrollWidth <=
+        document.documentElement.clientWidth,
     ),
   ).toBe(true);
   if (testInfo.project.name === 'mobile') {
