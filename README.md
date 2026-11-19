@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–05 mescladas; SPRINT 06 em revisão: gráficos, segmentos e análise determinística. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece na próxima sprint.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 em preparação para revisão de provedores e arquitetura de IA. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece na próxima sprint.
 
 ## Execução local
 
@@ -225,7 +225,7 @@ Docker indisponível no WSL usado durante a entrega: testes locais usaram Postgr
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 
-Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–05 mescladas; SPRINT 06 implementada em revisão, conforme ADR-006 aprovado. Próxima sprint depende de autorização.
+Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–06 mescladas; SPRINT 07 em preparação, com revisão de provedores/decisões no ADR-007 antes da implementação.
 
 ## Atividades e FIT de teste — SPRINT 05
 
