@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 em preparação, com decisões no ADR-009 ainda propostas. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 implementada em revisão no PR #11: Central de Monitoramento. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -268,3 +268,23 @@ Uma atividade/análise atualizada não reaproveita avaliações antigas como atu
 API (sessão de treinador; PUT exige Origin/CSRF): GET/PUT /activities/:id/feedback; GET /activities/:id/feedback/revisions?page=1; GET /activities/:id/feedback/revisions/:version; GET /athletes/:id/feedback?page=1. GET do diário pagina eventos em até 50 por página; demais listas usam 20 itens. PUT exige expectedVersion, inputRevision/inputHash, analysisId opcional nulo, content e confirmContext quando aplicável. Schema e limites estão no Swagger local e [ADR-008](docs/decisions/adr-008-coach-feedback.md).
 
 Aplicar migration com pnpm db:deploy e pnpm db:test:deploy para os respectivos bancos configurados. pnpm test:integration inclui os seis cenários de feedback. Executar E2E específico: pnpm exec playwright test --config playwright.activities.config.ts feedback.spec.ts (build prévio necessário). Nenhuma dependência ou segredo novo. Políticas produtivas de retenção/exclusão e homologação com dados reais continuam pendentes.
+
+## Central de Monitoramento — SPRINT 09 em revisão
+
+Abra **Central de Monitoramento** na sidebar (/monitoramento). A página mostra atividades disponíveis, análises concluídas, eventos esportivos agrupados, falhas terminais e **Sem feedback nesta revisão**. Um texto, ponto ou avaliação salvo no diário atual resolve essa última pendência; isso não valida todas as regras nem gera conclusão técnica automática. Limpar todo o diário pode reabrir a pendência. Nova revisão de atividade exige feedback no contexto atual após sua análise concluir.
+
+Marcar lido/não lido é independente de resolver a pendência. Duplicatas e retries não multiplicam avisos; versão nova pode voltar a não lido. Clique em **Atualizar central** para consultar novamente; sem polling ou sincronização instantânea. Erro de atualização mantém a última consulta válida com aviso, sem apresentar zeros fictícios. Filtros e indicadores usam o mesmo escopo autorizado. O período padrão é de 30 dias UTC, com limite de 90 por consulta; from/to são datas inclusivas YYYY-MM-DD e o limite superior real é a meia-noite do dia seguinte. A ordenação usa atualização do item, não o início da atividade.
+
+A busca de alunos mostra até 20 resultados autorizados por nome; refine a busca para encontrar outros. Os destinos também exigem autorização própria. Dados sintéticos continuam identificados; IA e integração Garmin oficial não aparecem como concluídas. Dados anteriores à migration podem exigir conciliação explícita; ausência na central não significa ausência no histórico esportivo.
+
+API: GET /monitoring (type, athleteId, from, to, read, state, page), GET /monitoring/athletes (q, selected) e PATCH /monitoring/:id/read com { expectedVersion, read }. Sessão do coach em todas; PATCH exige Origin/CSRF. Não enviar coachId pelo cliente. Fonte retirada/inacessível bloqueia listagem/contagens e retorna 404 na marcação; versão antiga retorna 409. GET não cria alertas ou marcas de leitura.
+
+Aplicar a migration com pnpm db:deploy e pnpm db:test:deploy. Para fontes já existentes, executar no ambiente/banco correto:
+
+```sh
+pnpm --filter @balducore/api maintenance reconcile-monitoring --coach UUID_DO_COACH --type activity --limit 1000
+```
+
+Tipos: activity, analysis, fit, integration ou connection; limite 1..10000 fontes por execução, lotes de até 100. Se nextCursor não for nulo, retomar com --cursor UUID_RETORNADO; uma consulta final vazia pode ser necessária. Resultado scanned/projected conta fontes visitadas/elegíveis, não novos alertas. Repetir é idempotente; não usar timestamp de reconstrução como instante original de falha. Logs/CLI não imprimem payload, nomes ou credenciais.
+
+Testes: pnpm test, pnpm test:integration e pnpm test:e2e:monitoring (build prévio para E2E). A suíte tem servidor próprio para respeitar os limites de login demo, além das suítes base/demo/atividades existentes. Template CI foi atualizado, mas continua inativo até liberar escopo workflow. Decisões em [ADR-009](docs/decisions/adr-009-monitoring.md). Sem serviço externo ou dependência nova; retenção/exclusão produtiva continuam pendentes.

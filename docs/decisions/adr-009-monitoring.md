@@ -1,6 +1,6 @@
 # ADR-009 — Central de Monitoramento, deduplicação e leitura
 
-Status: proposta para revisão. SPRINT 09 autorizada para preparação em 19/11/2026, após merge do PR #10 (e93b9af). Persistência, regras de pendência e implementação abaixo aguardam aprovação do responsável técnico. IA permanece adiada como DT-IA-01.
+Status: aprovado pelo responsável técnico em 19/11/2026. Implementação da SPRINT 09 em revisão no PR #11; aceite final e merge pendentes. IA permanece adiada como DT-IA-01.
 
 ## Problema e diagnóstico
 
@@ -36,7 +36,7 @@ FK composta obrigatória ao vínculo coach/aluno. Referências opcionais tipadas
 
 Unicidade da projeção não depende do ID de entrega repetida do provider: o identificador da fonte persistida e sua revisão definem o item. Upsert idempotente não muda updatedAt, version ou readAt se o significado não mudou. Mudança efetiva incrementa version; marcar como lido exige expectedVersion para não ocultar alerta novo por clique de uma aba antiga. Repetir a mesma marca na mesma versão é idempotente. Leitura e resolução são estados independentes: lido não significa corrigido.
 
-## Regras por categoria — para aprovação
+## Regras por categoria — aprovadas
 
 | Categoria                  | Identidade/condição                                                                              | Comportamento                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ PATCH /monitoring/:id/read recebe { expectedVersion, read }. Autenticação/sess
 
 UI deve distinguir falha de rede, estado vazio e filtro sem resultados. Preservar filtro e indicar conflito na marcação, sem marcar uma versão nova silenciosamente. Falha da central não é substituída por métricas fictícias. Permitir inspecionar configurações do próprio coach não concede direito aos dados esportivos de vínculos encerrados.
 
-## Plano após aprovação
+## Plano aprovado de implementação
 
 1. Migration e contrato de projeção com FKs/constraints/índices; regras puras de deduplicação, versão e leitura, sem dependências novas.
 2. Integrar publicação, conclusão, feedback, falha/recuperação/cancelamento e CLI de conciliação; testar transação, duplicatas, gerações, concorrência e rollback.
@@ -80,4 +80,18 @@ UI deve distinguir falha de rede, estado vazio e filtro sem resultados. Preserva
 
 Treinador identifica itens persistidos autorizados e abre o recurso correto; replay não multiplica alertas; nova revisão e leitura concorrente não ocultam atualização. retry não gera tempestade de avisos; falha terminal aparece e recuperação resolve. Contadores/lista respeitam os mesmos filtros, vínculo e aceites; retirada bloqueia imediatamente a próxima leitura/marcação, mesmo com projeção antiga. Feedback significativo atual resolve “sem feedback”; limpar conteúdo ou mudar contexto reabre conforme análise atual. Backfill não muda leitura/ordenação sem mudança real, nem inventa eventos passados.
 
-Aceite depende de revisão do responsável técnico. IA, Garmin oficial, políticas produtivas e Docker/CI continuam com os débitos registrados; nenhuma execução de produto nesta preparação. Não há envio externo, prescrições ou dashboard consolidado nesta sprint.
+Aceite depende de revisão do responsável técnico. IA, Garmin oficial, políticas produtivas e Docker/CI continuam com os débitos registrados; na preparação documental não houve execução de produto. Não há envio externo, prescrições ou dashboard consolidado nesta sprint.
+
+## Evidência da implementação
+
+MonitoringModule, projeção MonitoringEvent, migration com FKs/constraints e integrações transacionais implementados sem dependências novas. Consulta SQL parametrizada revalida vínculo/aceites, fonte e contexto; limites inclusivos de dia usam ISO com fuso explícito, verificados também em sessão PostgreSQL America/Sao_Paulo; calcula estado efetivo sem confiar apenas no estado materializado. Listagem e contadores usam o mesmo predicado em transação Repeatable Read. Marcação mantém a ordenação, exige versão corrente e registra auditoria; contexto que mudou sem conciliação não é marcado silenciosamente.
+
+GET /monitoring/athletes é uma consulta auxiliar do filtro: busca literal por nome (até 120 caracteres), no máximo 20 alunos com itens autorizados, e selected opcional para resolver a seleção atual sem listar cadastros de outro coach ou vínculos retirados. A UI atualiza essa consulta ao buscar/selecionar e atualizar a central. Essa rota não cria entidades ou permissões novas.
+
+A projeção foi ligada ao enqueue/publicação de atividades, conclusão/falha de análise, feedback, falhas/recuperação de integração e estado da conexão. Catch paths de FIT/análise passam a atualizar falha e projeção na mesma transação com lock/fencing. Recuperação de últimos leases de FIT/integração finaliza tentativas esgotadas, além da recuperação de análise existente. Replay e conciliação sem mudança preservam timestamps/leitura. Não reconstruir instante de falha antigo sem fonte confiável: indicar data da reconstrução.
+
+CLI no entrypoint maintenance: reconcile-monitoring --coach UUID --type activity|analysis|fit|integration|connection --limit 1..10000 [--cursor UUID]. Lotes de até 100, cursor por ID, lock/releitura e aceites por fonte. Retorno scanned/projected conta fontes visitadas/elegíveis, não quantidade de novos alertas; nextCursor permite continuação e pode exigir uma consulta final vazia. Não há varredura automática no GET/heartbeat. A projeção do tipo activity também atualiza a análise corrente relacionada e pendência de feedback.
+
+Validação local: builds, tipos, lint/formatação; 25 unitários (dois novos de período UTC/CLI) e 41 integração (seis novos de monitoramento). Integração cobre autorização, marcação/replay, concorrência com revisão nova, pendências, falhas, recuperação final de leases, paginação, backfill e rollback real após falha controlada da projeção. 36 cenários E2E passaram nas quatro suítes; central verificada nos três formatos e com navegador America/Sao_Paulo, datas UTC, filtros, links, erro sem perder a última consulta válida, conflito e isolamento. Capturas dark/light inspecionadas. Sete migrations aplicadas em banco existente e também em banco novo temporário, removido após verificação. Docker Compose e GitHub Actions não executados.
+
+A suíte E2E de monitoramento tem servidor próprio para respeitar o limite real de login da conta demo compartilhada, sem aumentar limites de produção. O template de CI inativo inclui o comando novo; ativação do workflow continua pendente da permissão já documentada. IA, integrações reais, retenção/exclusão e preparação produtiva continuam fora desta entrega.

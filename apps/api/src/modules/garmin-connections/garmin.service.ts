@@ -1,3 +1,4 @@
+import { projectConnection } from '../monitoring/projection.js';
 import { InvitationsService } from '../invitations/invitations.service.js';
 import {
   BadRequestException,
@@ -118,6 +119,7 @@ export class GarminService {
           lastError: null,
         },
       });
+      await projectConnection(tx, connection.id);
       await tx.garminAuthorizationAttempt.updateMany({
         where: { connectionId: connection.id, consumedAt: null },
         data: { consumedAt: new Date(), outcome: 'superseded' },
@@ -204,6 +206,7 @@ export class GarminService {
           where: { id: attempt.id },
           data: { outcome: 'failed' },
         });
+        await projectConnection(tx, attempt.connectionId);
       });
       throw new ServiceUnavailableException(
         'Autorização de teste indisponível. Inicie nova tentativa.',
@@ -239,6 +242,7 @@ export class GarminService {
           where: { id: attempt.id },
           data: { outcome: 'approved' },
         });
+        await projectConnection(tx, connection.id);
         await tx.auditLog.create({
           data: {
             coachId: session.coachId,

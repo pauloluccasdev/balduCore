@@ -1,4 +1,8 @@
 import {
+  projectIntegration,
+  projectConnection,
+} from '../monitoring/projection.js';
+import {
   enqueueAnalysis,
   processAnalysis,
   recoverAnalyses,
@@ -30,6 +34,45 @@ export class ActivityProcessingWorker {
   async recoverIntents() {
     await recoverFitImports(this.garmin);
     await recoverAnalyses(this.garmin);
+    const exhausted = await this.garmin.db.integrationEvent.findMany({
+      where: {
+        namespace: this.garmin.config.GARMIN_QUEUE_NAMESPACE,
+        status: 'processing',
+        attempts: { gte: 5 },
+        leaseUntil: { lte: new Date() },
+      },
+      take: 50,
+    });
+    for (const seed of exhausted)
+      await this.garmin.db.$transaction(async (tx) => {
+        await lockRelationship(tx, seed);
+        const changed = await tx.integrationEvent.updateMany({
+          where: {
+            id: seed.id,
+            status: 'processing',
+            attempts: { gte: 5 },
+            leaseUntil: { lte: new Date() },
+          },
+          data: {
+            status: 'failed',
+            runToken: null,
+            leaseUntil: null,
+            errorCode: 'retry_exhausted',
+          },
+        });
+        if (changed.count) {
+          if (seed.kind === 'revoke')
+            await tx.garminConnection.updateMany({
+              where: {
+                id: seed.connectionId,
+                generation: seed.generation + 1,
+                status: 'disconnected',
+              },
+              data: { revocationStatus: 'failed' },
+            });
+          await projectIntegration(tx, seed.id);
+        }
+      });
     const seeds = await this.garmin.db.integrationEvent.findMany({
       where: {
         namespace: this.garmin.config.GARMIN_QUEUE_NAMESPACE,
@@ -138,6 +181,7 @@ export class ActivityProcessingWorker {
             where: { id: current.connectionId },
             data: { revocationStatus: 'failed' },
           });
+        await projectIntegration(tx, current.id);
         return null;
       }
       return tx.integrationEvent.update({
@@ -289,6 +333,8 @@ export class ActivityProcessingWorker {
             where: { id: event.connectionId },
             data: { lastSyncedAt: new Date(), lastError: null },
           });
+          await projectIntegration(tx, event.id);
+          await projectConnection(tx, event.connectionId);
           await tx.auditLog.create({
             data: {
               coachId: event.coachId,
@@ -352,6 +398,8 @@ export class ActivityProcessingWorker {
                 : {}),
             },
           });
+        await projectIntegration(tx, event.id);
+        await projectConnection(tx, event.connectionId);
       });
       if (owned)
         this.logger.warn(

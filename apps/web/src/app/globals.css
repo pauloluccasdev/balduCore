@@ -1520,3 +1520,51 @@ tbody tr:last-child td {
 .feedback-fieldset select {
   text-overflow: ellipsis;
 }
+
+.monitoring-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 20px 0;
+}
+.monitoring-toolbar,
+.monitoring-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.monitoring-athlete-filter {
+  display: grid;
+  gap: 8px;
+  max-width: 260px;
+}
+.monitoring-filters {
+  margin-top: 20px;
+}
+.monitoring-item-title {
+  display: block;
+  margin: 6px 0;
+  color: var(--text);
+}
+.monitoring-unread {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.monitoring-unread td:first-child {
+  border-left: 3px solid var(--accent);
+}
+.monitoring-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+.monitoring-table td {
+  white-space: normal;
+  min-width: 160px;
+}
+@media (max-width: 700px) {
+  .monitoring-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .monitoring-athlete-filter {
+    max-width: none;
+    width: 100%;
+  }
+}

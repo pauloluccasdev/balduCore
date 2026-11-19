@@ -26,7 +26,7 @@ const navigation = [
     sprint: null,
   },
   { label: 'Assistente IA', icon: Sparkles, sprint: 'Sprint 07' },
-  { label: 'Central de Monitoramento', icon: Bell, sprint: 'Sprint 09' },
+  { label: 'Central de Monitoramento', icon: Bell, sprint: null },
 ];
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -56,9 +56,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                 ? '/'
                 : label === 'Atividades'
                   ? '/atividades'
-                  : label === 'Análise Esportiva'
-                    ? '/analise-esportiva'
-                    : '/alunos';
+                  : label === 'Central de Monitoramento'
+                    ? '/monitoramento'
+                    : label === 'Análise Esportiva'
+                      ? '/analise-esportiva'
+                      : '/alunos';
             const active =
               href === '/' ? pathname === '/' : pathname.startsWith(href);
             return (

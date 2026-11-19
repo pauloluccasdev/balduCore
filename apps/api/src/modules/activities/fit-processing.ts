@@ -1,3 +1,4 @@
+import { projectFit } from '../monitoring/projection.js';
 import { enqueueAnalysis } from '../sports-analysis/processing.js';
 import { randomUUID } from 'node:crypto';
 import type { JobWithMetadata } from 'pg-boss';
@@ -31,6 +32,36 @@ export async function cancelFitImports(
   });
 }
 export async function recoverFitImports(service: GarminService) {
+  const exhausted = await service.db.fitImport.findMany({
+    where: {
+      namespace: service.config.GARMIN_QUEUE_NAMESPACE,
+      status: 'processing',
+      attempts: { gte: 5 },
+      leaseUntil: { lte: new Date() },
+    },
+    take: 50,
+  });
+  for (const seed of exhausted)
+    await service.db.$transaction(async (tx) => {
+      await lockRelationship(tx, seed);
+      const changed = await tx.fitImport.updateMany({
+        where: {
+          id: seed.id,
+          status: 'processing',
+          attempts: { gte: 5 },
+          leaseUntil: { lte: new Date() },
+        },
+        data: {
+          status: 'failed',
+          normalized: Prisma.DbNull,
+          runToken: null,
+          leaseUntil: null,
+          errorCode: 'retry_exhausted',
+          finishedAt: new Date(),
+        },
+      });
+      if (changed.count) await projectFit(tx, seed.id);
+    });
   const seeds = await service.db.fitImport.findMany({
     where: {
       namespace: service.config.GARMIN_QUEUE_NAMESPACE,
@@ -89,6 +120,7 @@ export async function processFitImport(
           finishedAt: new Date(),
         },
       });
+      await projectFit(tx, current.id);
       return null;
     }
     return tx.fitImport.update({
@@ -155,6 +187,7 @@ export async function processFitImport(
             finishedAt: new Date(),
           },
         });
+        await projectFit(tx, event.id);
         await tx.auditLog.create({
           data: {
             coachId: event.coachId,
@@ -167,17 +200,22 @@ export async function processFitImport(
     );
   } catch {
     const retry = event.attempts < 5;
-    const updated = await db.fitImport.updateMany({
-      where: { id: event.id, status: 'processing', runToken },
-      data: {
-        status: retry ? 'retry' : 'failed',
-        runToken: null,
-        leaseUntil: null,
-        errorCode: retry ? 'publication_unavailable' : 'retry_exhausted',
-        ...(!retry
-          ? { normalized: Prisma.DbNull, finishedAt: new Date() }
-          : {}),
-      },
+    const updated = await db.$transaction(async (tx) => {
+      await lockRelationship(tx, seed);
+      const updated = await tx.fitImport.updateMany({
+        where: { id: event.id, status: 'processing', runToken },
+        data: {
+          status: retry ? 'retry' : 'failed',
+          runToken: null,
+          leaseUntil: null,
+          errorCode: retry ? 'publication_unavailable' : 'retry_exhausted',
+          ...(!retry
+            ? { normalized: Prisma.DbNull, finishedAt: new Date() }
+            : {}),
+        },
+      });
+      if (updated.count) await projectFit(tx, seed.id);
+      return updated;
     });
     if (updated.count && retry) throw new Error('fit_publication_retry');
   }

@@ -1,3 +1,8 @@
+import {
+  projectActivity,
+  projectAnalysis,
+  resolveMonitoring,
+} from '../monitoring/projection.js';
 import { randomUUID } from 'node:crypto';
 import type { JobWithMetadata } from 'pg-boss';
 import { Prisma, type Activity } from '../../generated/prisma/client.js';
@@ -59,6 +64,7 @@ export async function enqueueAnalysis(
       data: { jobId },
     });
   }
+  await projectActivity(tx, activity.id);
   return analysis;
 }
 export async function cancelAnalyses(
@@ -75,6 +81,7 @@ export async function cancelAnalyses(
       finishedAt: new Date(),
     },
   });
+  await resolveMonitoring(tx, scope);
 }
 export async function recoverAnalyses(service: GarminService) {
   // Se o processo caiu na última tentativa, o transporte não fará um sexto claim.
@@ -106,6 +113,7 @@ export async function recoverAnalyses(service: GarminService) {
           finishedAt: new Date(),
         },
       });
+      await projectAnalysis(tx, seed.id);
     });
 
   const seeds = await service.db.sportsAnalysis.findMany({
@@ -188,6 +196,7 @@ export async function processAnalysis(
             finishedAt: new Date(),
           },
         });
+        await projectAnalysis(tx, current.id);
         return null;
       }
       const analysis = await tx.sportsAnalysis.update({
@@ -250,6 +259,7 @@ export async function processAnalysis(
           finishedAt: new Date(),
         },
       });
+      await projectAnalysis(tx, current.id);
       await tx.auditLog.create({
         data: {
           coachId: current.coachId,
@@ -260,19 +270,24 @@ export async function processAnalysis(
     });
   } catch {
     const retry = !permanent && captured.analysis.attempts < 5;
-    const updated = await db.sportsAnalysis.updateMany({
-      where: { id: seed.id, status: 'processing', runToken },
-      data: {
-        status: retry ? 'retry' : 'failed',
-        runToken: null,
-        leaseUntil: null,
-        errorCode: permanent
-          ? 'invalid_analysis_input'
-          : retry
-            ? 'analysis_unavailable'
-            : 'retry_exhausted',
-        ...(!retry ? { finishedAt: new Date() } : {}),
-      },
+    const updated = await db.$transaction(async (tx) => {
+      await lockRelationship(tx, seed);
+      const updated = await tx.sportsAnalysis.updateMany({
+        where: { id: seed.id, status: 'processing', runToken },
+        data: {
+          status: retry ? 'retry' : 'failed',
+          runToken: null,
+          leaseUntil: null,
+          errorCode: permanent
+            ? 'invalid_analysis_input'
+            : retry
+              ? 'analysis_unavailable'
+              : 'retry_exhausted',
+          ...(!retry ? { finishedAt: new Date() } : {}),
+        },
+      });
+      if (updated.count) await projectAnalysis(tx, seed.id);
+      return updated;
     });
     if (updated.count && retry) throw new Error('analysis_retry');
   }
