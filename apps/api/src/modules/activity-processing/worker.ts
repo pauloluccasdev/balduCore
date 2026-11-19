@@ -1,3 +1,8 @@
+import {
+  processFitImport,
+  recoverFitImports,
+} from '../activities/fit-processing.js';
+import { summaryData, replaceDetails } from '../activities/activity-data.js';
 import { randomUUID } from 'node:crypto';
 import type { JobWithMetadata } from 'pg-boss';
 import type { Logger } from 'pino';
@@ -18,6 +23,7 @@ export class ActivityProcessingWorker {
     private readonly logger: Logger,
   ) {}
   async recoverIntents() {
+    await recoverFitImports(this.garmin);
     const seeds = await this.garmin.db.integrationEvent.findMany({
       where: {
         namespace: this.garmin.config.GARMIN_QUEUE_NAMESPACE,
@@ -74,6 +80,7 @@ export class ActivityProcessingWorker {
     });
   }
   async process(job: JobWithMetadata<IntegrationJob>) {
+    if (job.data.kind === 'fit') return processFitImport(this.garmin, job);
     const { db, config } = this.garmin;
     const runToken = randomUUID();
     const leaseUntil = new Date(
@@ -233,26 +240,27 @@ export class ActivityProcessingWorker {
           const obsolete = Boolean(
             existing && existing.revision >= normalized.revision,
           );
-          if (!obsolete)
-            await tx.activity.upsert({
+          if (!obsolete) {
+            const activity = await tx.activity.upsert({
               where: { connectionId_generation_externalId: identity },
               create: {
                 coachId: event.coachId,
                 athleteId: event.athleteId,
                 ...identity,
-                ...normalized,
-                startedAt: new Date(normalized.startedAt),
+                ...summaryData(normalized),
+                revision: normalized.revision,
+                source: normalized.source,
+                isSynthetic: normalized.isSynthetic,
                 dataHash,
               },
               update: {
+                ...summaryData(normalized),
                 revision: normalized.revision,
-                sport: normalized.sport,
-                startedAt: new Date(normalized.startedAt),
-                durationSeconds: normalized.durationSeconds,
-                distanceMeters: normalized.distanceMeters,
                 dataHash,
               },
             });
+            await replaceDetails(tx, activity, normalized);
+          }
           await tx.integrationEvent.update({
             where: { id: event.id },
             data: {

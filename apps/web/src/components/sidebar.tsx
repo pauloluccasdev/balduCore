@@ -19,7 +19,7 @@ const navigation = [
   { label: 'Dashboard', icon: LayoutDashboard, sprint: null },
   { label: 'Alunos', icon: Users, sprint: null },
   { label: 'Planejamento', icon: CalendarDays, sprint: 'MVP 2' },
-  { label: 'Atividades', icon: Activity, sprint: 'Sprint 05' },
+  { label: 'Atividades', icon: Activity, sprint: null },
   {
     label: 'Análise Esportiva',
     icon: ChartNoAxesCombined,
@@ -50,44 +50,46 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
       <nav aria-label="Navegação principal">
         <ul className="nav-list">
-          {navigation.map(({ label, icon: Icon, sprint }) => (
-            <li key={label}>
-              {sprint ? (
-                <div
-                  className="nav-item future"
-                  aria-disabled="true"
-                  title={`${label} em desenvolvimento`}
-                >
-                  <Icon size={19} aria-hidden="true" />
-                  <span>{label}</span>
-                  <small>{sprint === 'MVP 2' ? 'MVP 2' : 'Em breve'}</small>
-                </div>
-              ) : (
-                <Link
-                  className={`nav-item ${label === 'Dashboard' ? (pathname === '/' ? 'active' : '') : pathname.startsWith('/alunos') ? 'active' : ''}`}
-                  href={label === 'Dashboard' ? '/' : '/alunos'}
-                  aria-current={
-                    (
-                      label === 'Dashboard'
-                        ? pathname === '/'
-                        : pathname.startsWith('/alunos')
-                    )
-                      ? 'page'
-                      : undefined
-                  }
-                  onClick={onNavigate}
-                >
-                  <Icon size={19} aria-hidden="true" />
-                  <span>{label}</span>
-                  <ChevronRight
-                    className="active-chevron"
-                    size={15}
-                    aria-hidden="true"
-                  />
-                </Link>
-              )}
-            </li>
-          ))}
+          {navigation.map(({ label, icon: Icon, sprint }) => {
+            const href =
+              label === 'Dashboard'
+                ? '/'
+                : label === 'Atividades'
+                  ? '/atividades'
+                  : '/alunos';
+            const active =
+              href === '/' ? pathname === '/' : pathname.startsWith(href);
+            return (
+              <li key={label}>
+                {sprint ? (
+                  <div
+                    className="nav-item future"
+                    aria-disabled="true"
+                    title={`${label} em desenvolvimento`}
+                  >
+                    <Icon size={19} aria-hidden="true" />
+                    <span>{label}</span>
+                    <small>{sprint === 'MVP 2' ? 'MVP 2' : 'Em breve'}</small>
+                  </div>
+                ) : (
+                  <Link
+                    className={`nav-item ${active ? 'active' : ''}`}
+                    href={href}
+                    aria-current={active ? 'page' : undefined}
+                    onClick={onNavigate}
+                  >
+                    <Icon size={19} aria-hidden="true" />
+                    <span>{label}</span>
+                    <ChevronRight
+                      className="active-chevron"
+                      size={15}
+                      aria-hidden="true"
+                    />
+                  </Link>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
       <div className="sidebar-footer">

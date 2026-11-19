@@ -7,7 +7,7 @@ let stop: (() => Promise<void>) | undefined;
 try {
   const config = readConfig(process.env);
   logger.level = config.LOG_LEVEL;
-  if (config.GARMIN_PROVIDER === 'mock') {
+  if (config.GARMIN_PROVIDER === 'mock' || config.AUTH_MODE === 'demo') {
     const database = createDatabase(config.DATABASE_URL);
     const runtime = await createGarminRuntime(
       database.client,
@@ -25,7 +25,7 @@ try {
       }
     };
     await runtime.worker!.start();
-    logger.info({ code: 'GARMIN_MOCK_WORKER_STARTED' }, 'worker_started');
+    logger.info({ code: 'ACTIVITY_WORKER_STARTED' }, 'worker_started');
   } else logger.info({ code: 'GARMIN_DISABLED' }, 'worker_idle');
   const keepAlive = setInterval(() => {}, 60_000);
   await new Promise<void>((resolve) => {
@@ -37,8 +37,8 @@ try {
 } catch {
   await stop?.().catch(() => {});
   logger.fatal(
-    { code: 'GARMIN_WORKER_FAILED' },
-    'Verifique banco, migrations e configuração do mock local.',
+    { code: 'ACTIVITY_WORKER_FAILED' },
+    'Verifique banco, migrations e configuração do demo local.',
   );
   process.exitCode = 1;
 }

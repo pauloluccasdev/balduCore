@@ -1025,3 +1025,91 @@ test('desconexão com fila desabilitada mantém intenção durável e worker rec
     await app.close();
   }
 });
+
+test('revisão mock publica detalhes atomicamente e remove amostras/splits ausentes na revisão seguinte', async () => {
+  const app = await createTestApp(0, undefined, 'demo');
+  try {
+    const c = await enrolledAthlete(app);
+    const connection = await c.connect();
+    const credentials = app.garmin.service.decodeCredentials(
+      connection.encryptedCredentials!,
+    );
+    const wire: ProviderDelivery = {
+      accountId: credentials.accountId,
+      deliveryId: 'details-v1',
+      kind: 'activity',
+      activity: {
+        ...fixtureActivity,
+        timerSeconds: 20,
+        elapsedSeconds: 22,
+        samples: [
+          { timestamp: fixtureActivity.startedAt, speedMetersPerSecond: 0 },
+        ],
+        splits: [
+          {
+            startedAt: fixtureActivity.startedAt,
+            endedAt: null,
+            distanceMeters: 5000,
+          },
+        ],
+      },
+    };
+    assert.equal((await delivery(app, wire)).status, 202);
+    await runNext(app);
+    const db = app.database.client;
+    const activity = await db.activity.findFirstOrThrow({
+      where: { connectionId: connection.id },
+    });
+    assert.equal(
+      await db.activitySample.count({ where: { activityId: activity.id } }),
+      1,
+    );
+    assert.equal(
+      await db.activitySplit.count({ where: { activityId: activity.id } }),
+      1,
+    );
+    await assert.rejects(
+      db.activitySample.create({
+        data: {
+          activityId: activity.id,
+          athleteId: c.athlete.id,
+          coachId: c.other.id,
+          ordinal: 9,
+          timestamp: new Date(),
+        },
+      }),
+    );
+    assert.equal(
+      (
+        await delivery(app, {
+          ...wire,
+          deliveryId: 'details-v2',
+          activity: { ...fixtureActivity, revision: 2 },
+        })
+      ).status,
+      202,
+    );
+    await runNext(app);
+    const revised = await db.activity.findUniqueOrThrow({
+      where: { id: activity.id },
+    });
+    assert.equal(revised.revision, 2);
+    assert.equal(revised.timerSeconds, null);
+    assert.equal(revised.durationSeconds, null);
+    assert.equal(
+      await db.activitySample.count({ where: { activityId: activity.id } }),
+      0,
+    );
+    assert.equal(
+      await db.activitySplit.count({ where: { activityId: activity.id } }),
+      0,
+    );
+    const detail = await (
+      await c.get(`/activities/${activity.id}`, c.coach.cookie)
+    ).json();
+    assert.equal(detail.paceSecondsPerKm, null);
+    assert.equal(detail.status, 'summary_only');
+  } finally {
+    await app.close();
+  }
+});

@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINT 04 em revisão: fundação, login demonstrativo, alunos/convites/aceites e integração Garmin mock com processamento assíncrono. SPRINTS 01–03 mescladas. Google real e provider Garmin oficial permanecem desabilitados/adiados; dashboard continua demonstrativo. Histórico detalhado, FIT, análises e IA entram nas próximas sprints.
+SPRINTS 01–04 mescladas; SPRINT 05 em revisão: histórico de atividades, métricas/splits/amostras e importação FIT de teste. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; gráficos/análises e IA são das próximas sprints.
 
 ## Execução local
 
@@ -99,7 +99,7 @@ pnpm dev
 
 `garmin:setup` exige `.env` com AUTH_MODE=demo, origem/bind locais e ambiente fora de produção. Gera chaves de 32 bytes para GARMIN_TOKEN_KEY e GARMIN_MOCK_SIGNING_KEY no `.env` ignorado, preserva chaves existentes válidas e não as imprime. Não altera credenciais Google, não envia dados nem cria autorização real. Reiniciar API/worker após mudar a configuração. Não versionar o `.env` ou compartilhar as chaves.
 
-`pnpm dev` faz um build inicial da API e inicia três processos: Nest, Next e worker do mesmo backend. O worker fica ocioso quando o mock está desabilitado. Para processos separados, após `pnpm build`:
+`pnpm dev` faz um build inicial da API e inicia três processos: Nest, Next e worker do mesmo backend. No demo, o worker também processa FIT quando o mock está desabilitado; fora do demo e sem mock, fica ocioso. Para processos separados, após `pnpm build`:
 
 ```bash
 pnpm --filter @balducore/api start
@@ -107,7 +107,7 @@ pnpm --filter @balducore/web start
 pnpm --filter @balducore/api worker
 ```
 
-Executar cada comando em um terminal. API e worker leem o mesmo `.env`, banco, GARMIN_QUEUE_NAMESPACE e chaves; manter esses valores estáveis. pg-boss 12.38.2 usa schema próprio no mesmo PostgreSQL, sem Redis. Instalação/migração automática do schema da biblioteca é restrita ao mock local; produção oficial exige plano de migração/deploy aprovado. Migrations Prisma continuam versionadas em prisma/migrations. O usuário local do banco precisa criar schema/tabelas da fila.
+Executar cada comando em um terminal. API e worker leem o mesmo `.env`, banco, GARMIN_QUEUE_NAMESPACE e chaves; manter esses valores estáveis. pg-boss 12.38.2 usa schema próprio no mesmo PostgreSQL, sem Redis. Instalação/migração automática do schema da biblioteca é restrita ao demo local; produção oficial exige plano de migração/deploy aprovado. Migrations Prisma continuam versionadas em prisma/migrations. O usuário local do banco precisa criar schema/tabelas da fila.
 
 Fluxo manual:
 
@@ -120,7 +120,7 @@ Fluxo manual:
 7. Confirmar **Desconectar integração simulada** bloqueia coleta/publicação imediatamente e mantém vínculo esportivo ativo. Revogação fica pendente até o worker concluir; falha externa não reativa acesso. **Falha temporária na revogação** configura duas falhas de teste antes de desconectar. Encerramento pelo link público da 03 também desconecta, além de encerrar o vínculo.
 8. Para reconectar após expirar a jornada inicial, coach de vínculo ativo gera **Link para conexão de teste**. Nova verificação por código demonstrativo é obrigatória; propósito Garmin preserva aceites anteriores e não permite reativar vínculo encerrado. Código aparece em **Atualizar convites**. Links anteriores são revogados; retirar acompanhamento continua usando capability de encerramento separada.
 
-Configurações na sidebar mostra conta, integração oficial indisponível, mock/worker e conexões do próprio treinador. Perfil/lista refletem estados persistidos. A SPRINT 04 guarda apenas envelope mínimo de Activity, sem página de histórico, FIT, séries temporais, insights ou IA.
+Configurações na sidebar mostra conta, integração oficial indisponível, mock/worker e conexões do próprio treinador. Perfil/lista refletem estados persistidos. A SPRINT 05 amplia o envelope mínimo da 04 com histórico, FIT de teste, métricas e séries disponíveis. Insights e IA permanecem futuros.
 
 API (prefixo `/api` no Next):
 
@@ -179,7 +179,7 @@ Limites compartilhados no PostgreSQL: 15 inícios de login/minuto, 30 callbacks/
 
 ## Migrations e operação
 
-Migrations versionadas em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria, buckets de limite e, na SPRINT 03, Invitation, EnrollmentSession, ConsentDocument, ConsentEvidence e WithdrawalAccess. SPRINT 04 acrescenta GarminConnection, GarminAuthorizationAttempt, IntegrationEvent, Activity mínima e WorkerHeartbeat; pg-boss mantém schema próprio. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
+Migrations versionadas em `apps/api/prisma/migrations/` com Coach, sessões, tentativas OAuth, Athlete, vínculo, auditoria, buckets de limite e, na SPRINT 03, Invitation, EnrollmentSession, ConsentDocument, ConsentEvidence e WithdrawalAccess. SPRINT 04 acrescenta GarminConnection, GarminAuthorizationAttempt, IntegrationEvent, Activity mínima e WorkerHeartbeat; a 05 amplia Activity e acrescenta ActivitySample, ActivitySplit e FitImport. pg-boss mantém schema próprio. Constraints compostas impedem referências entre treinadores; auditoria mínima não guarda nomes, e-mails ou payloads.
 
 ```bash
 pnpm db:deploy
@@ -213,7 +213,7 @@ Integração também valida convites, resgate/aceite/encerramento concorrentes, 
 ## Estrutura e identidade visual
 
 - apps/web: páginas públicas/protegidas, componentes, tokens e fixtures do dashboard.
-- apps/api: Nest modular Auth/Athletes/Invitations/Consents/Garmin/ActivityProcessing, worker, Prisma e testes.
+- apps/api: Nest modular Auth/Athletes/Invitations/Consents/Garmin/Activities/ActivityProcessing, worker, Prisma e testes.
 - infra: Compose, inicialização do banco de testes e modelo de CI.
 - docs: arquitetura, domínio, decisões, roadmap e oito PNGs originais.
 
@@ -225,4 +225,18 @@ Docker indisponível no WSL usado durante a entrega: testes locais usaram Postgr
 
 CI pronto em `infra/github-actions-ci.yml`, ainda inativo: OAuth App do GitHub não possui escopo workflow para publicar em `.github/workflows/`. Com credencial autorizada, mover para esse destino via PR. Modelo atualizado com migrations do banco de testes; nenhum resultado de Actions é alegado.
 
-Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–03 mescladas; SPRINT 04 em revisão. Merge e SPRINT 05 dependem de autorização.
+Veja [ADR-002](docs/decisions/adr-002-auth-athletes.md), [ADR-003](docs/decisions/adr-003-invitations-consents.md), [ADR-004](docs/decisions/adr-004-garmin-processing.md) e [roadmap](docs/roadmap.md). SPRINTS 01–04 mescladas; SPRINT 05 em revisão. Merge e início da 06 dependem do responsável técnico.
+
+## Atividades e FIT de teste — SPRINT 05
+
+1. Entrar como treinador demo, cadastrar aluno e concluir os aceites demonstrativos pelo convite. Vínculo ativo/aceites são obrigatórios, conexão Garmin é independente.
+2. No perfil, em **Histórico esportivo**, selecionar FIT sintético, confirmar os dados de teste e **Importar FIT de teste**. Formato binário, até 5 MiB, uma sessão, no máximo 20 mil amostras/2 mil splits. Não enviar arquivo de pessoa real nesta fase.
+3. O SDK oficial valida integridade/CRC e decodifica em thread com até 5 s/128 MiB. O bruto é descartado; só métricas permitidas entram no staging normalizado e na fila. GPS, nome de arquivo e identificadores de dispositivo não são persistidos. ACK não significa publicação concluída.
+4. **Atualizar processamento** mostra fila, processamento, retry, conclusão/falha/cancelamento. Manter o worker ativo (`pnpm dev` já o inicia). Não exige mock Garmin; com GARMIN_PROVIDER=disabled e AUTH_MODE=demo, a fila FIT permanece disponível usando namespace estável.
+5. **Consultar histórico** abre a lista filtrada pelo aluno; sidebar abre o histórico geral do treinador. Filtros por nome/modalidade/origem/período UTC e disponibilidade de séries. Detalhe oferece resumo, tempo de cronômetro/decorrido, splits e amostras paginados. Ausências são —; gráficos/eventos/IA ficam nas sprints seguintes.
+
+Reenvio do mesmo hash/coach retorna a mesma importação. Mesmo arquivo em outro aluno do mesmo coach é rejeitado, sem reassociação. Falha terminal preserva metadados, limpa staging e não reabre o mesmo hash automaticamente. Outro coach é independente. Possível duplicata entre origens com mesmo início/modalidade gera aviso, sem mesclar dados. Encerramento bloqueia consulta/publicação e cancela staging; desconectar Garmin mantém importação manual independente. Prazo de retenção/exclusão produtiva ainda exige definição.
+
+API documentada em /docs: GET /activities (q, athleteId, sport, source, from, to, status, page, limit), GET /activities/:id, /samples e /splits (page/limit), GET/POST /athletes/:id/fit-imports. Upload exige application/octet-stream, sessão/CSRF/Origin e X-Demo-File=true. Lista até 100, séries até 1000 por página; interface usa 20 e 100. Cadência em ciclos/min conforme FIT, sem dobrar automaticamente valores de corrida.
+
+Validação de navegador: `pnpm test:e2e:activities` executa os três formatos em servidor próprio e serialmente, respeitando a quota de upload por coach. `pnpm test:e2e:demo` preserva as regressões de demo/convites/Garmin sem ultrapassar o limite real de login da conta compartilhada. Não desabilitar proteções para acelerar testes.

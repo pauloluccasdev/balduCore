@@ -1,3 +1,4 @@
+import { FitImport } from '../../../../features/activities/fit-import';
 import { GarminPanel } from '../../../../features/garmin/garmin-panel';
 import {
   garminLabels,
@@ -69,13 +70,20 @@ export default async function Profile({
             />
           </Card>
           <Card title="Histórico esportivo">
-            <div className="empty-state">
-              <p>
-                O histórico detalhado de atividades estará disponível em uma
-                próxima etapa. Os recebimentos simulados aparecem na seção de
-                conexão e sincronização.
-              </p>
-            </div>
+            <p className="muted small">
+              Atividades disponíveis durante o vínculo ativo e com aceites
+              válidos.
+            </p>
+            <Link
+              className="button"
+              href={`/atividades?athleteId=${athlete.id}`}
+            >
+              Consultar histórico →
+            </Link>
+            {session.mode === 'demo' &&
+              athlete.relationship?.status === 'active' && (
+                <FitImport athleteId={athlete.id} />
+              )}
           </Card>
         </div>
         <Card title="Acompanhamento">
