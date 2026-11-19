@@ -164,6 +164,18 @@ test('FIT de teste no perfil, publicação, histórico filtrado, detalhes e tema
     await expect(
       page.getByRole('heading', { name: 'Splits recebidos (1)', exact: true }),
     ).toBeVisible();
+    const samples = page.getByRole('region', {
+      name: 'Amostras da atividade',
+      exact: true,
+    });
+    await samples.focus();
+    await expect(samples).toBeFocused();
+    if (info.project.name === 'mobile') {
+      await page.keyboard.press('ArrowRight');
+      await expect
+        .poll(() => samples.evaluate((element) => element.scrollLeft))
+        .toBeGreaterThan(0);
+    }
     await page.screenshot({
       path: info.outputPath('activity-details.png'),
       fullPage: true,

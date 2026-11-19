@@ -31,7 +31,12 @@ export function ActivityTable({ items }: { items: Activity[] }) {
             </Link>
           </div>
         ) : (
-          <div className="table-scroll activities-scroll">
+          <div
+            className="table-scroll activities-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Histórico de atividades"
+          >
             <table>
               <thead>
                 <tr>

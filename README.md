@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 implementada em revisão no PR #12, conforme ADR-010 aprovado. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 mesclada no PR #12, conforme ADR-010 aprovado. SPRINT 11 implementada em revisão no PR #13, conforme ADR-011 aprovado. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard consulta dados persistidos autorizados; os registros de demonstração continuam identificados como sintéticos. IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -289,7 +289,7 @@ Tipos: activity, analysis, fit, integration ou connection; limite 1..10000 fonte
 
 Testes: pnpm test, pnpm test:integration e pnpm test:e2e:monitoring (build prévio para E2E). A suíte tem servidor próprio para respeitar os limites de login demo, além das suítes base/demo/atividades existentes. Template CI foi atualizado, mas continua inativo até liberar escopo workflow. Decisões em [ADR-009](docs/decisions/adr-009-monitoring.md). Sem serviço externo ou dependência nova; retenção/exclusão produtiva continuam pendentes.
 
-## Dashboard consolidado — SPRINT 10 em revisão
+## Dashboard consolidado — SPRINT 10 mesclada
 
 `GET /dashboard?period=30` aceita 7, 30 ou 90 dias UTC inclusivos até hoje e modalidade opcional (`sport`). A API exige sessão, aplica rate limit e devolve um snapshot de leitura Repeatable Read, sem novas tabelas, migrations ou dependências. A composição dark/light preserva as referências; as fixtures fixas foram removidas.
 
@@ -300,3 +300,11 @@ Volume separa modalidade e proveniência, mostrando valores conhecidos/ausentes:
 Dados esportivos e estado Garmin exigem vínculo ativo e aceites vigentes. Retirada remove o acesso na próxima consulta; cadastro básico continua disponível conforme a gestão de alunos. FIT não comprova conexão Garmin. Conexão é estado local, mock é simulação e integração oficial permanece indisponível. IA continua DT-IA-01 e planejamento continua MVP 2.
 
 Atualização é manual. Falha inicial mostra indisponibilidade; falha ao atualizar preserva o snapshot anterior com aviso e horário. Não há polling, escrita de negócio em GET ou preenchimento com dados fictícios. `pnpm test:e2e:dashboard` exercita dados persistidos, filtros/navegação, erro, isolamento e retirada em desktop/tablet/mobile.
+
+## Qualidade e piloto local — SPRINT 11
+
+[Runbook, checklist e evidências](docs/operations/pilot.md): operação de API/banco/fila/worker, revisão de segurança/UX, métricas delimitadas e bloqueios externos. Piloto permanece local e sintético; IA DT-IA-01 e integrações reais continuam pendentes.
+
+`pnpm db:recovery:drill` exige RECOVERY_ADMIN_URL explícita para postgres em loopback, fora de produção, e pg_dump/pg_restore compatíveis no PATH. Cria somente seus bancos temporários, aplica migrations, gera dados sintéticos, restaura e verifica conteúdo/chave/fila; remove os recursos próprios. Não usa o banco operacional como origem nem aceita destino de restauração fornecido. Não imprimir URLs/segredos ou publicar dumps/traces. Consultar o runbook antes de executar.
+
+Ativação de CI aprovada, porém a publicação do workflow foi recusada por escopo workflow ausente na credencial GitHub. Template atualizado em infra/github-actions-ci.yml; mover para .github/workflows/ci.yml com credencial autorizada por PR. Nenhum resultado de Actions alegado. Não há dependência ou migration nova nesta sprint.

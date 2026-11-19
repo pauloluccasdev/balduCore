@@ -1,4 +1,4 @@
-name: Foundation checks
+name: BalduCore checks
 on:
   pull_request:
   push:
@@ -7,7 +7,8 @@ permissions:
   contents: read
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17.7-bookworm
@@ -28,8 +29,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client-17
+      - run: echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
       - run: cp .env.example .env
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --strict-peer-dependencies
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
@@ -38,6 +41,7 @@ jobs:
       - run: pnpm db:deploy
       - run: pnpm db:test:deploy
       - run: pnpm test:integration
+      - run: RECOVERY_ADMIN_URL=postgresql://balducore:local_dev_only@127.0.0.1:5432/postgres pnpm db:recovery:drill
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
@@ -45,11 +49,4 @@ jobs:
       - run: pnpm test:e2e:activities
       - run: pnpm test:e2e:monitoring
       - run: pnpm test:e2e:dashboard
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: foundation-browser-results
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 7
+# Não publicar traces/relatórios: podem conter cookies e capabilities de teste.

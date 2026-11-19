@@ -34,6 +34,27 @@ test('HTTP: liveness independente, readiness 503 sanitizado e logs sem URL/segre
       database: 'down',
     });
     assert.equal((await fetch(`${url}/athletes`)).status, 404);
+    const malformed = await fetch(`${url}/health?token=private-token`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        cookie: 'session=private-cookie',
+        authorization: 'Bearer private-bearer',
+      },
+      body: '{"secret":"private-body",',
+    });
+    assert.equal(malformed.status, 400);
+    assert.equal(malformed.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(malformed.headers.get('referrer-policy'), 'no-referrer');
+    const message = JSON.stringify(await malformed.json());
+    assert.ok(!message.includes('private-body'));
+    assert.ok(!message.includes('SyntaxError'));
+    assert.ok(logs.every((line) => !/private-(cookie|bearer|body)/.test(line)));
+    const correlationId = malformed.headers.get('x-request-id');
+    assert.ok(
+      logs.some((line) => JSON.parse(line).correlationId === correlationId),
+    );
+
     assert.ok(logs.length >= 2);
     assert.ok(
       logs.every(

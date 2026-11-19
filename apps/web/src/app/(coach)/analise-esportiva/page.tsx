@@ -28,7 +28,7 @@ export default async function AnalysisIndex({
     return `/analise-esportiva?${next}`;
   };
   return (
-    <main id="dashboard" className="main-content">
+    <main id="dashboard" className="main-content" tabIndex={-1}>
       <header className="page-header">
         <div>
           <h1>Análise esportiva</h1>
@@ -83,7 +83,12 @@ export default async function AnalysisIndex({
             </Link>
           </div>
         ) : (
-          <div className="table-scroll activities-scroll">
+          <div
+            className="table-scroll activities-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Atividades disponíveis para análise"
+          >
             <table>
               <thead>
                 <tr>

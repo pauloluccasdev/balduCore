@@ -1,6 +1,6 @@
 # ADR-010 — Dashboard consolidado e semântica dos indicadores
 
-Status: aprovado pelo responsável técnico em 19/11/2026. Implementação da SPRINT 10 em revisão no PR #12; aceite final e merge pendentes. IA permanece adiada como DT-IA-01.
+Status: aprovado pelo responsável técnico em 19/11/2026. SPRINT 10 aprovada e mesclada no PR #12 em 19/11/2026, commit a5fa5c0. IA permanece adiada como DT-IA-01.
 
 ## Problema e diagnóstico
 

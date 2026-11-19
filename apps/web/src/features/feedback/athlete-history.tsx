@@ -34,7 +34,12 @@ export async function AthleteFeedbackHistory({
           Nenhum diário registrado. Abra uma atividade para adicionar feedback.
         </p>
       )}
-      <div className="table-scroll">
+      <div
+        className="table-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label="Diários do aluno"
+      >
         <table className="data-table">
           <thead>
             <tr>

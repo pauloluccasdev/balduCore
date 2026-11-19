@@ -32,7 +32,7 @@ export default async function Athletes({
     return `/alunos?${next}`;
   }
   return (
-    <main className="main-content" id="dashboard">
+    <main className="main-content" id="dashboard" tabIndex={-1}>
       <header className="page-header">
         <div>
           <h1>Alunos</h1>

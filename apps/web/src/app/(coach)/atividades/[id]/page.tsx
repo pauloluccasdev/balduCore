@@ -80,7 +80,7 @@ export default async function Detail({
     </nav>
   );
   return (
-    <main id="dashboard" className="main-content">
+    <main id="dashboard" className="main-content" tabIndex={-1}>
       <header className="page-header">
         <div>
           <Link
@@ -164,7 +164,12 @@ export default async function Detail({
           </p>
         ) : (
           <>
-            <div className="table-scroll">
+            <div
+              className="table-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Splits da atividade"
+            >
               <table>
                 <thead>
                   <tr>
@@ -203,7 +208,12 @@ export default async function Detail({
           </p>
         ) : (
           <>
-            <div className="table-scroll activities-scroll">
+            <div
+              className="table-scroll activities-scroll"
+              tabIndex={0}
+              role="region"
+              aria-label="Amostras da atividade"
+            >
               <table>
                 <thead>
                   <tr>

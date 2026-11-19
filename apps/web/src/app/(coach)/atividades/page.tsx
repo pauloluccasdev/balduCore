@@ -51,7 +51,7 @@ export default async function Activities({
     return `/atividades?${next}`;
   };
   return (
-    <main id="dashboard" className="main-content">
+    <main id="dashboard" className="main-content" tabIndex={-1}>
       <header className="page-header">
         <div>
           <p className="eyebrow">ACOMPANHAMENTO ESPORTIVO</p>
