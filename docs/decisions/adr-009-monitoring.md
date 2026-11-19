@@ -1,6 +1,6 @@
 # ADR-009 — Central de Monitoramento, deduplicação e leitura
 
-Status: aprovado pelo responsável técnico em 19/11/2026. Implementação da SPRINT 09 em revisão no PR #11; aceite final e merge pendentes. IA permanece adiada como DT-IA-01.
+Status: aprovado pelo responsável técnico em 19/11/2026. Implementação aprovada e mesclada no PR #11 em 19/11/2026, commit fea1059. IA permanece adiada como DT-IA-01.
 
 ## Problema e diagnóstico
 

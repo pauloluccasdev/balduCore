@@ -2,7 +2,7 @@
 
 Plataforma de gestão e inteligência esportiva para treinadores. Operação inicial: **BalduTraining**.
 
-SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 implementada em revisão no PR #11: Central de Monitoramento. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
+SPRINTS 01–06 mescladas; gráficos, segmentos e análise determinística disponíveis. SPRINT 07 adiada como débito técnico DT-IA-01; IA não implementada. SPRINT 08 mesclada no PR #10: diário e histórico do treinador. SPRINT 09 mesclada no PR #11: Central de Monitoramento. SPRINT 10 em preparação no ADR-010. Histórico de atividades, métricas/splits/amostras e FIT de teste disponíveis. Login fictício mantido; Google real e Garmin oficial permanecem adiados/bloqueados. Dashboard continua demonstrativo; IA permanece pendente, sem data de retomada.
 
 ## Execução local
 
@@ -269,7 +269,7 @@ API (sessão de treinador; PUT exige Origin/CSRF): GET/PUT /activities/:id/feedb
 
 Aplicar migration com pnpm db:deploy e pnpm db:test:deploy para os respectivos bancos configurados. pnpm test:integration inclui os seis cenários de feedback. Executar E2E específico: pnpm exec playwright test --config playwright.activities.config.ts feedback.spec.ts (build prévio necessário). Nenhuma dependência ou segredo novo. Políticas produtivas de retenção/exclusão e homologação com dados reais continuam pendentes.
 
-## Central de Monitoramento — SPRINT 09 em revisão
+## Central de Monitoramento — SPRINT 09 mesclada
 
 Abra **Central de Monitoramento** na sidebar (/monitoramento). A página mostra atividades disponíveis, análises concluídas, eventos esportivos agrupados, falhas terminais e **Sem feedback nesta revisão**. Um texto, ponto ou avaliação salvo no diário atual resolve essa última pendência; isso não valida todas as regras nem gera conclusão técnica automática. Limpar todo o diário pode reabrir a pendência. Nova revisão de atividade exige feedback no contexto atual após sua análise concluir.
 

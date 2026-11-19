@@ -1,6 +1,6 @@
 # Modelo de domínio inicial
 
-Status: persistência das SPRINTS 02–06 mesclada; IA adiada na SPRINT 07 como débito técnico DT-IA-01. Feedback da SPRINT 08 aprovado e mesclado; monitoramento da SPRINT 09 implementado em revisão. Data: 2026-11-19.
+Status: persistência das SPRINTS 02–06 mesclada; IA adiada na SPRINT 07 como débito técnico DT-IA-01. Feedback da SPRINT 08 aprovado e mesclado; monitoramento da SPRINT 09 aprovado e mesclado; dashboard consolidado em preparação na SPRINT 10. Data: 2026-11-19.
 
 ## Entidades e invariantes
 
@@ -115,7 +115,7 @@ FIT usa SDK oficial em thread limitada, somente demo local/arquivos sintéticos;
 
 Tela contextual preserva dark/light, sidebar e cards das referências; resumo real, textos opcionais, pontos com origem explícita e intervalos validados, avaliações dos eventos determinísticos disponíveis e histórico somente leitura. Perfil agrega diários por atividade. Não há nota independente de atividade ou validação de hipótese gerada por IA (DT-IA-01), prescrição, notificações ou envio ao aluno. Exclusão/retencão produtiva permanecem pendentes; histórico não é armazenamento eterno obrigatório. Detalhes de execução e testes no README/roadmap.
 
-## Incremento da SPRINT 09 — em revisão
+## Incremento da SPRINT 09 — aprovado e mesclado
 
 [ADR-009](../decisions/adr-009-monitoring.md) aprovado. MonitoringEvent é projeção persistida com destinatário coach, vínculo e referências tipadas por FKs compostas. Produtores projetam publicação/conclusão/falha/recuperação/feedback na mesma transação; chave estável, assinatura e versão impedem duplicatas e preservam leitura/ordenação quando não há mudança. Consulta SQL parametrizada revalida fonte, contexto, vínculo e consentimentos, com contadores/lista no mesmo escopo. Leitura exige versão atual e não resolve pendência por si.
 
