@@ -4,6 +4,10 @@ import demo from './playwright.demo.config';
 // Servidor independente também preserva o rate limit real de login da suíte demo.
 export default defineConfig({
   ...demo,
-  testMatch: ['**/activities.spec.ts', '**/analysis.spec.ts'],
+  testMatch: [
+    '**/activities.spec.ts',
+    '**/analysis.spec.ts',
+    '**/feedback.spec.ts',
+  ],
   workers: 1,
 });

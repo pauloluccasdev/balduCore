@@ -307,6 +307,7 @@ model Activity {
   splits ActivitySplit[]
   fitImport FitImport?
   analyses SportsAnalysis[]
+  feedback CoachFeedback?
   dataHash String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -405,7 +406,42 @@ model SportsAnalysis {
   errorCode String?
   createdAt DateTime @default(now())
   finishedAt DateTime?
+  feedbackRevisions CoachFeedbackRevision[]
+  @@unique([coachId, athleteId, activityId, id])
   @@unique([activityId, inputRevision, inputHash, algorithmVersion])
   @@index([coachId, athleteId, activityId, createdAt])
   @@index([namespace, status])
+}
+
+
+model CoachFeedback {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  activityId String @unique
+  activity Activity @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Restrict)
+  version Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  revisions CoachFeedbackRevision[]
+  @@unique([coachId, athleteId, activityId])
+  @@unique([coachId, athleteId, activityId, id])
+  @@index([coachId, athleteId, updatedAt])
+}
+
+model CoachFeedbackRevision {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  activityId String
+  feedbackId String
+  feedback CoachFeedback @relation(fields: [coachId, athleteId, activityId, feedbackId], references: [coachId, athleteId, activityId, id], onDelete: Restrict)
+  version Int
+  inputRevision Int
+  inputHash String
+  analysisId String?
+  analysis SportsAnalysis? @relation(fields: [coachId, athleteId, activityId, analysisId], references: [coachId, athleteId, activityId, id], onDelete: Restrict)
+  content Json
+  createdAt DateTime @default(now())
+  @@unique([feedbackId, version])
 }

@@ -1,6 +1,6 @@
 export async function mutate(
   path: string,
-  method: 'POST' | 'PATCH',
+  method: 'POST' | 'PATCH' | 'PUT',
   body?: unknown,
 ) {
   const session = await fetch('/api/auth/session', { cache: 'no-store' });

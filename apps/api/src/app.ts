@@ -1,3 +1,4 @@
+import { FeedbackModule } from './modules/coach-feedback/feedback.module.js';
 import { AnalysisModule } from './modules/sports-analysis/analysis.module.js';
 import { ActivitiesModule } from './modules/activities/activities.module.js';
 import 'reflect-metadata';
@@ -23,7 +24,7 @@ import type { PrismaClient } from './generated/prisma/client.js';
 import type { Config } from './config.js';
 import type { IdentityProvider } from './modules/auth/google-provider.js';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import type { Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 @Catch()
 class SanitizedErrors implements ExceptionFilter {
   catch(error: unknown, host: ArgumentsHost) {
@@ -65,6 +66,11 @@ export async function createApp(
   @Module({
     imports: features
       ? [
+          FeedbackModule.register(
+            features.client,
+            features.config,
+            features.provider,
+          ),
           AnalysisModule.register(
             features.client,
             features.config,
@@ -147,7 +153,25 @@ export async function createApp(
       next();
     },
   );
-  app.useBodyParser('json', { limit: '16kb' });
+  // O teto global continua pequeno; somente o diário admite JSON de até 64 KiB.
+  // rawBody preserva também a verificação de assinatura do provider mock.
+  app.useBodyParser('json', { limit: '64kb' });
+  app.use(
+    (
+      req: Request & { rawBody?: Buffer },
+      res: Response,
+      next: NextFunction,
+    ) => {
+      const feedback =
+        req.method === 'PUT' &&
+        /^\/activities\/[^/]+\/feedback$/.test(req.path);
+      if ((req.rawBody?.length ?? 0) > 16384 && !feedback) {
+        res.status(413).json({ message: 'Corpo da requisição excessivo.' });
+        return;
+      }
+      next();
+    },
+  );
   app.useBodyParser('raw', { type: 'application/octet-stream', limit: '5mb' });
   if (exposeDocs) {
     const spec = new DocumentBuilder()

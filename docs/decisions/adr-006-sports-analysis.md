@@ -1,6 +1,6 @@
 # ADR-006 — Análise esportiva determinística e investigação de trechos
 
-Status: decisões aprovadas pelo responsável técnico (“sim.. pode começar”); SPRINT 06 implementada para revisão, sem declaração de conclusão antes do aceite. Base: PR #7 mesclado (78eb10e). Data: 2026-11-18.
+Status: decisões aprovadas pelo responsável técnico (“sim.. pode começar”); SPRINT 06 aprovada e mesclada via PR #8 (d47b4ff). Base: PR #7 mesclado (78eb10e). Data: 2026-11-18.
 
 ## Problema e base disponível
 
