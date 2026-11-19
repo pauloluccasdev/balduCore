@@ -1,3 +1,4 @@
+import { projectConnection } from '../monitoring/projection.js';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { IntegrationQueue } from '../activity-processing/queue.js';
@@ -99,6 +100,7 @@ export async function disconnectInTransaction(
       lastError: null,
     },
   });
+  await projectConnection(tx, connection.id);
   if (pending) {
     const event = await tx.integrationEvent.create({
       data: {

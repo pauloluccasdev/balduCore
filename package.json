@@ -25,6 +25,7 @@
     "test:e2e:demo": "playwright test --config playwright.demo.config.ts",
     "garmin:setup": "pnpm --filter @balducore/api garmin:setup",
     "test:e2e:activities": "playwright test --config playwright.activities.config.ts",
+    "test:e2e:monitoring": "playwright test --config playwright.monitoring.config.ts",
     "test:e2e:analysis": "playwright test --config playwright.activities.config.ts analysis.spec.ts"
   },
   "devDependencies": {

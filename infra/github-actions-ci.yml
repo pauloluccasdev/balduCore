@@ -43,6 +43,7 @@ jobs:
       - run: pnpm test:e2e
       - run: pnpm test:e2e:demo
       - run: pnpm test:e2e:activities
+      - run: pnpm test:e2e:monitoring
       - uses: actions/upload-artifact@v4
         if: always()
         with:

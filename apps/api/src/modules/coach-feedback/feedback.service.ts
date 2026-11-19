@@ -1,3 +1,4 @@
+import { projectActivity } from '../monitoring/projection.js';
 import {
   BadRequestException,
   ConflictException,
@@ -261,6 +262,7 @@ export class FeedbackService {
           content: body.content,
         },
       });
+      await projectActivity(tx, id);
       await tx.auditLog.create({
         data: {
           coachId,

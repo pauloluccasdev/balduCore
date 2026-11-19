@@ -78,6 +78,7 @@ model CoachAthleteRelationship {
   garminConnection GarminConnection?
   activities Activity[]
   fitImports FitImport[]
+  monitoring MonitoringEvent[]
   @@unique([coachId, athleteId])
   @@index([coachId, status])
 }
@@ -232,6 +233,7 @@ model GarminConnection {
   authorizations GarminAuthorizationAttempt[]
   events IntegrationEvent[]
   activities Activity[]
+  monitoring MonitoringEvent[]
   @@unique([coachId, athleteId])
   @@unique([coachId, athleteId, id])
 }
@@ -273,6 +275,8 @@ model IntegrationEvent {
   errorCode String?
   createdAt DateTime @default(now())
   processedAt DateTime?
+  monitoring MonitoringEvent[]
+  @@unique([coachId, athleteId, id])
   @@unique([connectionId, generation, kind, deliveryId])
   @@index([coachId, athleteId, createdAt])
   @@index([namespace, status])
@@ -308,6 +312,7 @@ model Activity {
   fitImport FitImport?
   analyses SportsAnalysis[]
   feedback CoachFeedback?
+  monitoring MonitoringEvent[]
   dataHash String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -371,6 +376,8 @@ model FitImport {
   errorCode String?
   createdAt DateTime @default(now())
   finishedAt DateTime?
+  monitoring MonitoringEvent[]
+  @@unique([coachId, athleteId, id])
   @@unique([coachId, fileHash])
   @@unique([coachId, athleteId, activityId])
   @@index([coachId, athleteId, createdAt])
@@ -407,6 +414,7 @@ model SportsAnalysis {
   createdAt DateTime @default(now())
   finishedAt DateTime?
   feedbackRevisions CoachFeedbackRevision[]
+  monitoring MonitoringEvent[]
   @@unique([coachId, athleteId, activityId, id])
   @@unique([activityId, inputRevision, inputHash, algorithmVersion])
   @@index([coachId, athleteId, activityId, createdAt])
@@ -444,4 +452,41 @@ model CoachFeedbackRevision {
   content Json
   createdAt DateTime @default(now())
   @@unique([feedbackId, version])
+}
+
+
+model MonitoringEvent {
+  id String @id @default(uuid())
+  coachId String
+  athleteId String
+  relationship CoachAthleteRelationship @relation(fields: [coachId, athleteId], references: [coachId, athleteId], onDelete: Restrict)
+  kind String
+  deduplicationKey String
+  activityId String?
+  activity Activity? @relation(fields: [coachId, athleteId, activityId], references: [coachId, athleteId, id], onDelete: Restrict)
+  analysisId String?
+  analysis SportsAnalysis? @relation(fields: [coachId, athleteId, activityId, analysisId], references: [coachId, athleteId, activityId, id], onDelete: Restrict)
+  fitImportId String?
+  fitImport FitImport? @relation(fields: [coachId, athleteId, fitImportId], references: [coachId, athleteId, id], onDelete: Restrict)
+  integrationEventId String?
+  integrationEvent IntegrationEvent? @relation(fields: [coachId, athleteId, integrationEventId], references: [coachId, athleteId, id], onDelete: Restrict)
+  connectionId String?
+  connection GarminConnection? @relation(fields: [coachId, athleteId, connectionId], references: [coachId, athleteId, id], onDelete: Restrict)
+  generation Int?
+  inputRevision Int?
+  inputHash String?
+  algorithmVersion String?
+  eventCount Int @default(0)
+  errorCode String?
+  state String @default("active")
+  signature String
+  version Int @default(1)
+  readAt DateTime?
+  readVersion Int?
+  occurredAt DateTime
+  updatedAt DateTime
+  timeBasis String @default("source")
+  @@unique([coachId, deduplicationKey])
+  @@index([coachId, updatedAt, id])
+  @@index([coachId, athleteId, kind])
 }

@@ -1,9 +1,19 @@
+import {
+  reconcileMonitoring,
+  reconciliationArguments,
+} from '../modules/monitoring/reconcile.js';
 import { createDatabase } from '../database.js';
 import { readConfig } from '../config.js';
 const database = createDatabase(readConfig(process.env).DATABASE_URL);
 try {
   const command = process.argv[2];
-  if (command === 'cleanup-auth') {
+  if (command === 'reconcile-monitoring') {
+    const result = await reconcileMonitoring(
+      database.client,
+      reconciliationArguments(process.argv.slice(3)),
+    );
+    console.log(JSON.stringify({ action: 'monitoring.reconciled', ...result }));
+  } else if (command === 'cleanup-auth') {
     const now = new Date();
     const expired = await database.client.$transaction([
       database.client.authAttempt.deleteMany({
